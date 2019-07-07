@@ -6,12 +6,12 @@
 // uint8 is an unsigned char, can hold values  0 - 255.
 typedef struct Flags
 {
-  uint8_t z : 1;
-  uint8_t s : 1;
-  uint8_t p : 1;
-  uint8_t cy : 1;
-  uint8_t ac : 1;
-  uint8_t pad : 3;
+  uint8_t z : 1;   // zero flag
+  uint8_t s : 1;   // sign flag
+  uint8_t p : 1;   // parity flag
+  uint8_t cy : 1;  // carry flag
+  uint8_t ac : 1;  // auxilary carry falg
+  uint8_t pad : 3; // parity flag
 } Flags;
 
 typedef struct State8080
@@ -34,7 +34,7 @@ int Disassemble8080(unsigned char *codebuffer, int pc)
 {
   unsigned char *code = &codebuffer[pc];
   int opbytes = 1;
-  printf("%04x ", pc);
+  printf("%07x ", pc);
   switch (*code)
   {
   case 0x00:
@@ -909,9 +909,13 @@ int Emulate8080(State8080 *state)
   case 0x04:
     UnimplementedInstruction(state);
     break;
-  case 0x05:
-    UnimplementedInstruction(state);
-    break;
+  case 0x05: // DCR B
+  {
+    uint8_t res = state->b - 1;
+    state->flags.z = (res == 0);
+    state->flags.s
+  }
+  break;
   case 0x06: // MVI
     state->b = opcode[1];
     state->pc++;
@@ -947,14 +951,20 @@ int Emulate8080(State8080 *state)
   case 0x10:
     UnimplementedInstruction(state);
     break;
-  case 0x11:
-    UnimplementedInstruction(state);
+  case 0x11: // LXI D
+    state->e = opcode[1];
+    state->d = opcode[2];
+    state->pc += 2;
     break;
   case 0x12:
     UnimplementedInstruction(state);
     break;
-  case 0x13:
-    UnimplementedInstruction(state);
+  case 0x13: // INX D  -  (DE) <- DE + 1
+    state->e++;
+    if (state->e == 0)
+    {
+      state->d++;
+    }
     break;
   case 0x14:
     UnimplementedInstruction(state);
@@ -974,9 +984,12 @@ int Emulate8080(State8080 *state)
   case 0x19:
     UnimplementedInstruction(state);
     break;
-  case 0x1A:
-    UnimplementedInstruction(state);
-    break;
+  case 0x1A: // LDAX D   -   A <- (DE)
+  {
+    uint16_t offset = (state->d << 8) | state->e; // grabs the memory location from registers d and e.
+    state->a = state->memory[offset];             // stores the content of that location in register a.
+  }
+  break;
   case 0x1B:
     UnimplementedInstruction(state);
     break;
@@ -996,14 +1009,22 @@ int Emulate8080(State8080 *state)
   case 0x20:
     UnimplementedInstruction(state);
     break;
-  case 0x21:
-    UnimplementedInstruction(state);
+  case 0x21: // LXI H
+    state->l = opcode[1];
+    state->h = opcode[2];
+    state->pc += 2;
     break;
   case 0x22:
     UnimplementedInstruction(state);
     break;
-  case 0x23:
-    UnimplementedInstruction(state);
+  case 0x23: //   INX H    -    (HL) <- HL + 1
+    state->l++;
+    if (state->l == 0)
+    {
+      state->h++;
+    }
+    // pretty sure we do this cos we want to add to reg l,
+    // but if it becomes 0, it has overflowed so we add to reg h.
     break;
   case 0x24:
     UnimplementedInstruction(state);
@@ -1259,9 +1280,12 @@ int Emulate8080(State8080 *state)
   case 0x76:
     UnimplementedInstruction(state);
     break;
-  case 0x77:
-    UnimplementedInstruction(state);
-    break;
+  case 0x77: // MOV M,A    -   (HL) <- A
+  {
+    uint16_t offset = (state->h << 8) | state->l;
+    state->memory[offset] = state->a;
+  }
+  break;
   case 0x78:
     UnimplementedInstruction(state);
     break;
