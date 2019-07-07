@@ -1493,7 +1493,14 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
   case 0xC3:
-    state->pc = (opcode[2] << 8) | opcode[1]; // not sure why we bitshift. not sure why we logical or??
+    state->pc = (opcode[2] << 8) | opcode[1];
+    // we construct a 16 bit offset by combining the Highest 8 bits with the Lowest 8 bits.
+    // this is achieved by an 8 bit shift left, then a bitwise or. eg:
+    // H =                           H7H6H5H4H3H2H1H0
+    // H << 8 =     H7H6H5H4H3H2H1H0  0 0 0 0 0 0 0 0
+    // H << 8 | L = H7H6H5H4H3H2H1H0 L7L6L5L4L3L2L1L0
+    // we do this cos representing a 16 bit value requires two bytes. left shift puts H in the second (high) byte
+    // and | combines it with the low byte, producing the needed offset.
     break;
   case 0xC4:
     UnimplementedInstruction(state);
@@ -1510,8 +1517,9 @@ int Emulate8080(State8080 *state)
   case 0xC8:
     UnimplementedInstruction(state);
     break;
-  case 0xC9:
-    UnimplementedInstruction(state);
+  case 0xC9: // RET
+    state->pc = state->memory[state->sp] | (state->memory[state->sp + 1] << 8);
+    state->sp += 2;
     break;
   case 0xCA:
     UnimplementedInstruction(state);
@@ -1523,11 +1531,13 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
   case 0xCD: // CALL
-    uint16_t ret = state->pc + 2;
-    state->memory[state->sp-1] = (ret >> 8) & 0xff;
-    state->sp = state->sp -2;
-    state->pc = (opcode[2] << 8) | opcode[1];
-    break;
+  {
+    uint16_t ret = state->pc + 2; // gets the address of the stack
+    state->memory[state->sp - 1] = (ret >> 8) & 0xff;
+    state->sp = state->sp - 2;
+    state->pc = (opcode[2] << 8) | opcode[1]; // changes pc to be whats specified by the following bytes.
+  }
+  break;
   case 0xCE:
     UnimplementedInstruction(state);
     break;
