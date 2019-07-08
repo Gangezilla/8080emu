@@ -873,6 +873,22 @@ int Disassemble8080(unsigned char *codebuffer, int pc)
   return opbytes;
 }
 
+int parity(int x, int size)
+{
+  int i;
+  int p = 0;
+  x = (x & (1 << size) - 1); // bit shift it across to compare
+  for (i = 0; i < size; i++)
+  {
+    if (x & 0x1)
+    {
+      p++;
+    }
+    x = x >> 1; // check it, then shift it up one each time
+  }
+  return (0 == (p & 0x1));
+}
+
 void UnimplementedInstruction(State8080 *state)
 {
   state->pc--; // pc incremented at start of emulate8080, undo that.
@@ -894,6 +910,13 @@ int Emulate8080(State8080 *state)
   switch (*opcode)
   {
   case 0x00: // NOP
+  case 0x08:
+  case 0x10:
+  case 0x18:
+  case 0x20:
+  case 0x28:
+  case 0x30:
+  case 0x38:
     break;
   case 0x01: // LXI B,word
     state->c = opcode[1];
@@ -913,17 +936,16 @@ int Emulate8080(State8080 *state)
   {
     uint8_t res = state->b - 1;
     state->flags.z = (res == 0);
-    state->flags.s
+    state->flags.s = (0x80 == (res & 0x80));
+    state->flags.p = parity(res, 8);
+    state->b = res;
   }
   break;
-  case 0x06: // MVI
+  case 0x06: // MVI B
     state->b = opcode[1];
     state->pc++;
     break;
   case 0x07:
-    UnimplementedInstruction(state);
-    break;
-  case 0x08:
     UnimplementedInstruction(state);
     break;
   case 0x09:
@@ -941,16 +963,14 @@ int Emulate8080(State8080 *state)
   case 0x0D:
     UnimplementedInstruction(state);
     break;
-  case 0x0E:
-    UnimplementedInstruction(state);
+  case 0x0E: // MVI C
+    state->c = opcode[1];
+    state->pc++;
     break;
   case 0x0F:
     UnimplementedInstruction(state);
     break;
 
-  case 0x10:
-    UnimplementedInstruction(state);
-    break;
   case 0x11: // LXI D
     state->e = opcode[1];
     state->d = opcode[2];
@@ -978,10 +998,7 @@ int Emulate8080(State8080 *state)
   case 0x17:
     UnimplementedInstruction(state);
     break;
-  case 0x18:
-    UnimplementedInstruction(state);
-    break;
-  case 0x19:
+  case 0x19: // DAD D    -   HL = HL + DE
     UnimplementedInstruction(state);
     break;
   case 0x1A: // LDAX D   -   A <- (DE)
@@ -1006,9 +1023,6 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
 
-  case 0x20:
-    UnimplementedInstruction(state);
-    break;
   case 0x21: // LXI H
     state->l = opcode[1];
     state->h = opcode[2];
@@ -1032,18 +1046,23 @@ int Emulate8080(State8080 *state)
   case 0x25:
     UnimplementedInstruction(state);
     break;
-  case 0x26:
-    UnimplementedInstruction(state);
+  case 0x26: // MVI H
+    state->h = opcode[1];
+    state->pc++;
     break;
   case 0x27:
     UnimplementedInstruction(state);
     break;
-  case 0x28:
-    UnimplementedInstruction(state);
-    break;
-  case 0x29:
-    UnimplementedInstruction(state);
-    break;
+  case 0x29: // DAD H
+  {
+    uint32_t hl = (state->h << 8) | state->l;
+    // we gen a 32 bit offset (cos we add 16bit reg to 16bit reg)
+    uint32_t res = hl + hl;
+    state->h = (res & 0xff00) >> 8;
+    state->l = res & 0xff;
+    state->flags.cy = ((res & 0xffff0000) != 0);
+  }
+  break;
   case 0x2A:
     UnimplementedInstruction(state);
     break;
@@ -1060,9 +1079,6 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
   case 0x2F:
-    UnimplementedInstruction(state);
-    break;
-  case 0x30:
     UnimplementedInstruction(state);
     break;
   case 0x31: // LXI
@@ -1085,9 +1101,6 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
   case 0x37:
-    UnimplementedInstruction(state);
-    break;
-  case 0x38:
     UnimplementedInstruction(state);
     break;
   case 0x39:
@@ -1255,8 +1268,8 @@ int Emulate8080(State8080 *state)
   case 0x6E:
     UnimplementedInstruction(state);
     break;
-  case 0x6F:
-    UnimplementedInstruction(state);
+  case 0x6F: // MOV L,A
+    state->l = state->a;
     break;
 
   case 0x70:
@@ -1513,8 +1526,15 @@ int Emulate8080(State8080 *state)
   case 0xC1:
     UnimplementedInstruction(state);
     break;
-  case 0xC2:
-    UnimplementedInstruction(state);
+  case 0xC2: // JNZ
+    if (state->flags.z == 0)
+    {
+      state->pc = (opcode[2] << 8) | opcode[1];
+    }
+    else
+    {
+      state->pc += 2;
+    }
     break;
   case 0xC3:
     state->pc = (opcode[2] << 8) | opcode[1];
@@ -1584,8 +1604,13 @@ int Emulate8080(State8080 *state)
   case 0xD4:
     UnimplementedInstruction(state);
     break;
-  case 0xD5:
-    UnimplementedInstruction(state);
+  case 0xD5: // PUSH D
+    state->memory[state->sp - 1] = state->d;
+    state->memory[state->sp - 2] = state->e;
+    // we use d and e cos they're used together to store 16 bit values
+    // so we move the two register values onto the stack
+    state->sp = state->sp - 2;
+    // then we update where the stack is pointing to.
     break;
   case 0xD6:
     UnimplementedInstruction(state);
@@ -1633,8 +1658,10 @@ int Emulate8080(State8080 *state)
   case 0xE4:
     UnimplementedInstruction(state);
     break;
-  case 0xE5:
-    UnimplementedInstruction(state);
+  case 0xE5: // PUSH H
+    state->memory[state->sp - 1] = state->h;
+    state->memory[state->sp - 2] = state->l;
+    state->sp = state->sp - 2;
     break;
   case 0xE6:
     UnimplementedInstruction(state);
