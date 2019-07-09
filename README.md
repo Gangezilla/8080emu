@@ -1,8 +1,12 @@
 # 8080emu
 
-## Discoveries
+## Overview of 8080
 
-### Why do we bitshift and then do a logical or?
+TODO
+
+## FAQ (by me)
+
+### Why do we bitshift and then do a logical or so often?
 
 There's a lot of code that looks like this, ie bit shift a higher order byte, and then logical or it with the lower order byte.
 `state->pc = (opcode[2] << 8) | opcode[1];`
@@ -54,3 +58,23 @@ The parity flag is set if the number of 1 bits in the result is even. It's basic
 It was originally used by telegraphs, and other serial communication protocols. The idea was to count the number of set bits in a character and include an extra bit to indicate whether that character contained an even or odd number of set bits. That way, the receiver can count the number of bits, and verify that the extra "parity" bit indicated a successful transmission.
 
 It ended up in CPU's to support serial communication hardware, basically.
+
+### What's the deal with the DAD instructions?
+
+So we get the 16 bit reg values. then we add them together. Then we put into the H register a value that's calculated like this:
+
+```
+  res (7728):          1111000110000
+  res & 0xff00:        110000
+  (res & 0xff00) >> 8: 11110
+```
+
+We shift it back to the right to basically undo how we got H and D in the first place. We do our calculations with 0xff00 because it's the max number we can store in 2 bytes, and we use 0xff with register L because it's the max value in 1 byte. We're basically undoing the transforms we did earlier. We set the carry flag with 0xffff0000 because that's the max number that can be stored by 4 bytes.
+
+### What's a PSW? What's going on in the POP PSW (0xf1) instruction?
+
+PSW is a special register pair of the accumulator and the flags. PSW stands for program status word, and it's apparently the piece of memory that contains the status flags. It's a piece of memory that is designed to keep track of the current state of the system. It's formed by treating the accumulator and Flags as one single 16 bit register.
+
+POP PSW pops both accumulator and the flags off the stack. The content of the memory location specified in the stack pointer is used to restore the condition flags. The content of the stack pointer plus one is moved to register A, and the stack pointer itself is incremented by 2.
+
+I think we want to POP PSW to restore the flags back to a previous state. The implementation is as it is, because when we construct the 16bit PSW, we can get the individual flags by checking if a binary position of that number is equivalent to a particular number, such as 0x01 or 0x02.

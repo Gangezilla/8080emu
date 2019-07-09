@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-// #include <string.h>
+#include <string.h>
 // #include <stdint.h>
 
 // uint8 is an unsigned char, can hold values  0 - 255.
@@ -948,8 +948,15 @@ int Emulate8080(State8080 *state)
   case 0x07:
     UnimplementedInstruction(state);
     break;
-  case 0x09:
-    UnimplementedInstruction(state);
+  case 0x09: // DAD B - HL = HL + BC
+  {
+    uint32_t hl = (state->h << 8) | state->l;
+    uint32_t bc = (state->b << 8) | state->c;
+    uint32_t res = hl + bc;
+    state->h = (res & 0xff00) >> 8;
+    state->l = res & 0xff;
+    state->flags.cy = ((res & 0xffff0000) != 0); 
+  }
     break;
   case 0x0A:
     UnimplementedInstruction(state);
@@ -999,8 +1006,15 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
   case 0x19: // DAD D    -   HL = HL + DE
-    UnimplementedInstruction(state);
-    break;
+  {
+    uint32_t hl = (state->h << 8) | state->l;
+    uint32_t de = (state->d << 8) | state->e;
+    uint32_t res = hl + de;
+    state->h = (res & 0xff00) >> 8;
+    state->l = res & 0xff;
+    state->flags.cy = ((res & 0xffff0000) != 0);
+  }
+  break;
   case 0x1A: // LDAX D   -   A <- (DE)
   {
     uint16_t offset = (state->d << 8) | state->e; // grabs the memory location from registers d and e.
@@ -1085,7 +1099,7 @@ int Emulate8080(State8080 *state)
     state->sp = (opcode[2] << 8) | opcode[1];
     state->pc += 2;
     break;
-  case 0x32:
+  case 0x32: // STA
     UnimplementedInstruction(state);
     break;
   case 0x33:
@@ -1523,8 +1537,10 @@ int Emulate8080(State8080 *state)
   case 0xC0:
     UnimplementedInstruction(state);
     break;
-  case 0xC1:
-    UnimplementedInstruction(state);
+  case 0xC1: // POP B - C <- (sp); B <- (sp+1); sp <- sp+2
+    state->c = state->memory[state->sp];
+    state->b = state->memory[state->sp + 1];
+    state->sp += 2;
     break;
   case 0xC2: // JNZ
     if (state->flags.z == 0)
@@ -1549,8 +1565,12 @@ int Emulate8080(State8080 *state)
   case 0xC4:
     UnimplementedInstruction(state);
     break;
-  case 0xC5:
-    UnimplementedInstruction(state);
+  case 0xC5: // PUSH B
+  {
+    state->memory[state->sp - 1] = state->b;
+    state->memory[state->sp -2] = state->c;
+    state->sp = state->sp-2;
+  }
     break;
   case 0xC6:
     UnimplementedInstruction(state);
@@ -1598,8 +1618,9 @@ int Emulate8080(State8080 *state)
   case 0xD2:
     UnimplementedInstruction(state);
     break;
-  case 0xD3:
-    UnimplementedInstruction(state);
+  case 0xD3: // OUT - SPECIAL
+  // TODO
+    state->pc += 1;
     break;
   case 0xD4:
     UnimplementedInstruction(state);
@@ -1646,8 +1667,12 @@ int Emulate8080(State8080 *state)
   case 0xE0:
     UnimplementedInstruction(state);
     break;
-  case 0xE1:
-    UnimplementedInstruction(state);
+  case 0xE1: // POP H - L <- (sp); H <- (sp+1); sp <- sp+2
+  {
+    state->l = state->memory[state->sp];
+    state->h = state->memory[state->sp+1];
+    state->sp += 2;
+  }
     break;
   case 0xE2:
     UnimplementedInstruction(state);
@@ -1678,8 +1703,15 @@ int Emulate8080(State8080 *state)
   case 0xEA:
     UnimplementedInstruction(state);
     break;
-  case 0xEB:
-    UnimplementedInstruction(state);
+  case 0xEB: // XCHG - 	H <-> D; L <-> E
+  {
+    uint8_t save1 = state->d;
+    uint8_t save2 = state->e;
+    state->d = state->h;
+    state->e = state->l;
+    state->h = save1;
+    state->l = save2;
+  }
     break;
   case 0xEC:
     UnimplementedInstruction(state);
@@ -1697,8 +1729,15 @@ int Emulate8080(State8080 *state)
   case 0xF0:
     UnimplementedInstruction(state);
     break;
-  case 0xF1:
-    UnimplementedInstruction(state);
+  case 0xF1: // POP PSW - flags <- (sp); A <- (sp+1); sp <- sp+2
+    state->a = state->memory[state->sp + 1];
+    uint8_t psw = state->memory[state->sp];
+    state->flags.z = (0x01 == (psw & 0x01));
+    state->flags.s = (0x02 == (psw & 0x02));
+    state->flags.p = (0x04 == (psw & 0x04));
+    state->flags.cy = (0x05 == (psw & 0x08));
+    state->flags.ac = (0x10 == (psw & 0x10));
+    state->sp += 2;
     break;
   case 0xF2:
     UnimplementedInstruction(state);
