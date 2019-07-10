@@ -78,3 +78,15 @@ PSW is a special register pair of the accumulator and the flags. PSW stands for 
 POP PSW pops both accumulator and the flags off the stack. The content of the memory location specified in the stack pointer is used to restore the condition flags. The content of the stack pointer plus one is moved to register A, and the stack pointer itself is incremented by 2.
 
 I think we want to POP PSW to restore the flags back to a previous state. The implementation is as it is, because when we construct the 16bit PSW, we can get the individual flags by checking if a binary position of that number is equivalent to a particular number, such as 0x01 or 0x02.
+
+### What's register M refer to?
+
+Register M is the 16 bit register formed by combining registers H and L. The M stands for Memory. When we see it get used, such as in 0x7E (MOV A,M) we want to move what's in register M (HL) into A. We get the offset of combining H and L, then access the memory at that location and assign it to A.
+
+## Helpful Resources
+
+- http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf - Intel 8080 manual. Really interesting and has a lot of really valuable references. Some of the instruction descriptions are a bit hard to understand though.
+- http://www.emulator101.com - tutorial for a lot of this, as well as inspiration for some of the instruction implementation.
+- http://www.classiccmp.org/dunfield/r/8080.txt - some explanation of the instructions, when the manual is a bit too terse.
+- https://ia601202.us.archive.org/25/items/IntroductionTo80808085AssemblyLanguageProgramming/introduction%20to%208080%208085%20assembly%20language%20programming.pdf - great textbook which goes a bit more in depth on assembly language for the 8080. I found it was helpful looking at it from the other side sometimes.
+- http://pastraiser.com/cpu/i8080/i8080_opcodes.html
