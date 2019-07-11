@@ -923,7 +923,7 @@ int Emulate8080(State8080 *state)
     state->b = opcode[2];
     state->pc += 2;
     break;
-  case 0x02:
+  case 0x02: // STAX B - (BC) <- A // NOT SURE
     UnimplementedInstruction(state);
     break;
   case 0x03:
@@ -975,8 +975,12 @@ int Emulate8080(State8080 *state)
     state->pc++;
     break;
   case 0x0F: // RRC
-    UnimplementedInstruction(state);
-    break;
+  {
+    uint8_t x = state->a;
+    state->a = ((x & 1) << 7) | (x >> 1);
+    state->flags.cy = (1 == (x & 1));
+  }
+  break;
 
   case 0x11: // LXI D
     state->e = opcode[1];
@@ -1161,8 +1165,9 @@ int Emulate8080(State8080 *state)
     state->a = res;
   }
   break;
-  case 0x3E:
-    UnimplementedInstruction(state);
+  case 0x3E: // MVI A
+    state->a = opcode[1];
+    state->pc++;
     break;
   case 0x3F:
     UnimplementedInstruction(state);
@@ -1677,8 +1682,15 @@ int Emulate8080(State8080 *state)
   case 0xD9:
     UnimplementedInstruction(state);
     break;
-  case 0xDA:
-    UnimplementedInstruction(state);
+  case 0xDA: // JC - if cy, PC<-adr
+    if (state->flags.cy == 1)
+    {
+      state->pc = (opcode[2] << 8) | opcode[1];
+    }
+    else
+    {
+      state->pc += 2;
+    }
     break;
   case 0xDB:
     UnimplementedInstruction(state);

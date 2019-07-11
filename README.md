@@ -83,6 +83,38 @@ I think we want to POP PSW to restore the flags back to a previous state. The im
 
 Register M is the 16 bit register formed by combining registers H and L. The M stands for Memory. When we see it get used, such as in 0x7E (MOV A,M) we want to move what's in register M (HL) into A. We get the offset of combining H and L, then access the memory at that location and assign it to A.
 
+### Why do we rotate?
+
+You've got some instructions like RRC which is where you rotate the accumulator to the right, meaning `0b00010000` becomes `0b00001000`. This is actually super cool! Doing this lets you multiply (left shift) and divide (right shift) by two.
+
+Our implementation (0x0F) works like so:
+
+`uint8_t x = state->a;`
+Let's say x is 27, or 0b0001_1010
+`state->a = ((x & 1) << 7) | (x >> 1);`
+`(x & 1)` is `(0b0001_1011 & 0b0000_0001)`
+`0b0000_00001 << 7` is 128, or `0b1000_0000`
+`0b0001_1011 >> 1 = 0b0000_1101`
+`0b0001_1011 | 0b0000_1101 = 0b0001_1111`
+Tjhen we set the carry flag like this,
+`state->flags.cy = (1 == (x & 1));`
+Which looks like this:
+`1 == (0b0000_00001 & 1) = 1`
+
+You can also use this to multiply or divide by any arbitrary number. For example, you multiply by decomposing the numbers by powers of two. Eg:
+
+```
+21 * 5 = 0b10101 * 0b101
+       = 0b10101 * ((1 * 2^2) + (0 + 2^1) + (1 * 2^0))
+       = 0b10101 * (2^2 + 0b10101 * 2^0)
+       = 0b10101 << 2 + 0b10101 << 0
+       = (0b10101 * 4) + (0b10101 * 1)
+       = 0b10101 * 5
+       = 21 * 5
+```
+
+(resourced from https://stackoverflow.com/questions/2776211/how-can-i-multiply-and-divide-using-only-bit-shifting-and-adding)
+
 ## Helpful Resources
 
 - http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf - Intel 8080 manual. Really interesting and has a lot of really valuable references. Some of the instruction descriptions are a bit hard to understand though.
