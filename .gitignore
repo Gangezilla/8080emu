@@ -53,3 +53,6 @@ dkms.conf
 
 # Editor specific folders
 .vscode/
+
+8080emu-first50.c
+emulator101

@@ -1929,15 +1929,15 @@ int Emulate8080(State8080 *state)
     break;
   }
   // Debugging information
-  printf("\tC=%d,P=%d,S=%d,Z=%d\n", state->flags.cy, state->flags.p,
-         state->flags.s, state->flags.z);
+  printf("\tC=%d,P=%d,S=%d,Z=%d,AC=%d\n", state->flags.cy, state->flags.p,
+         state->flags.s, state->flags.z, state->flags.ac);
   // printf("\tA $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x\n",
   //        state->a, state->b, state->c, state->d,
   //        state->e, state->h, state->l, state->sp);
   printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x\n",
          state->a, state->b, state->c, state->d,
          state->e, state->h, state->l, state->sp);
-  return 1;
+  return 0;
 }
 
 void ReadFileIntoMemoryAt(State8080 *state, char *filename, uint32_t offset)
