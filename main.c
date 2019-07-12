@@ -935,7 +935,7 @@ int Emulate8080(State8080 *state)
   case 0x08:
   case 0x10:
   case 0x18:
-  case 0x20:
+  // case 0x20:
   case 0x28:
   case 0x30:
   case 0x38:
@@ -1077,6 +1077,9 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
 
+  case 0x20:
+    UnimplementedInstruction(state);
+    break;
   case 0x21: // LXI H
     state->l = opcode[1];
     state->h = opcode[2];
@@ -1649,15 +1652,8 @@ int Emulate8080(State8080 *state)
       state->pc += 2;
     }
     break;
-  case 0xC3:
+  case 0xC3: // JMP
     state->pc = (opcode[2] << 8) | opcode[1];
-    // we construct a 16 bit offset by combining the Highest 8 bits with the Lowest 8 bits.
-    // this is achieved by an 8 bit shift left, then a bitwise or. eg:
-    // H =                           H7H6H5H4H3H2H1H0
-    // H << 8 =     H7H6H5H4H3H2H1H0  0 0 0 0 0 0 0 0
-    // H << 8 | L = H7H6H5H4H3H2H1H0 L7L6L5L4L3L2L1L0
-    // we do this cos representing a 16 bit value requires two bytes. left shift puts H in the second (high) byte
-    // and | combines it with the low byte, producing the needed offset.
     break;
   case 0xC4:
     UnimplementedInstruction(state);
@@ -1703,6 +1699,7 @@ int Emulate8080(State8080 *state)
   {
     uint16_t ret = state->pc + 2; // gets the address of the stack
     state->memory[state->sp - 1] = (ret >> 8) & 0xff;
+    state->memory[state->sp - 2] = (ret & 0xff);
     state->sp = state->sp - 2;
     state->pc = (opcode[2] << 8) | opcode[1]; // changes pc to be whats specified by the following bytes.
   }
@@ -1934,9 +1931,9 @@ int Emulate8080(State8080 *state)
   // printf("\tA $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x\n",
   //        state->a, state->b, state->c, state->d,
   //        state->e, state->h, state->l, state->sp);
-  printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x\n",
+  printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x PC %04x\n",
          state->a, state->b, state->c, state->d,
-         state->e, state->h, state->l, state->sp);
+         state->e, state->h, state->l, state->sp, state->pc);
   return 0;
 }
 
