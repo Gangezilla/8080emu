@@ -14,7 +14,7 @@ We do this to construct a 16 bit offset by combining the Highest 8 bits with the
 We do this because representing a 16 bit value requires two bytes. Left shifting puts H in the second (high) byte, and | combines it with the low byte, producing the offset.
 It looks like this:
 
-```
+```c
 H =                           H7H6H5H4H3H2H1H0
 H << 8 =     H7H6H5H4H3H2H1H0 0 0 0 0 0 0 0 0
 H << 8 | L = H7H6H5H4H3H2H1H0 L7L6L5L4L3L2L1L0
@@ -34,24 +34,24 @@ The processor maintains internal flag bits which indicate the result of logical 
 
 The sign flag is set like so:
 
-```
+```c
   uint8_t res = state->b - 1;
   state->flags.s = (0x80 == (res & 0x80));
 ```
 
 This means we first do the calculation, then we do some compares. This one checks to see if 0x80 is the same as the result logical and'ed with 0x80. For example, if our res is 255.
 
-```
+```c
 res  (255): 1 0 0 0 0 0 0 0 0
 0x80 (128): 0 1 1 1 1 1 1 1 1
 res & 0x80: 0 0 0 0 0 0 0 0 0
 ```
 
-We do this check because anding it will... TODO
+We do this check because 0x80 is 128, which is the max size of a signed integer. If it's bigger than this, we know we'd need to use a sign to represent this number.
 
 ### Why do we care about the parity flag?
 
-As per: https://stackoverflow.com/questions/25707130/what-is-the-purpose-of-the-parity-flag-on-a-cpu
+As per: <https://stackoverflow.com/questions/25707130/what-is-the-purpose-of-the-parity-flag-on-a-cpu>
 
 The parity flag is set if the number of 1 bits in the result is even. It's basically a leftover from the olden days to do parity checking in software which is a very simple error-detection scheme.
 
@@ -63,7 +63,7 @@ It ended up in CPU's to support serial communication hardware, basically.
 
 So we get the 16 bit reg values. then we add them together. Then we put into the H register a value that's calculated like this:
 
-```
+```c
   res (7728):          1111000110000
   res & 0xff00:        110000
   (res & 0xff00) >> 8: 11110
@@ -103,7 +103,7 @@ Which looks like this:
 
 You can also use this to multiply or divide by any arbitrary number. For example, you multiply by decomposing the numbers by powers of two. Eg:
 
-```
+```c
 21 * 5 = 0b10101 * 0b101
        = 0b10101 * ((1 * 2^2) + (0 + 2^1) + (1 * 2^0))
        = 0b10101 * (2^2 + 0b10101 * 2^0)
@@ -113,12 +113,27 @@ You can also use this to multiply or divide by any arbitrary number. For example
        = 21 * 5
 ```
 
-(resourced from https://stackoverflow.com/questions/2776211/how-can-i-multiply-and-divide-using-only-bit-shifting-and-adding)
+(resourced from <https://stackoverflow.com/questions/2776211/how-can-i-multiply-and-divide-using-only-bit-shifting-and-adding)>
+
+### What's going on with PUSH PSW (0xF5)?
+
+We're constructing a new 8 bit number by moving each of the flags across so that when we add them up, it looks something like this:
+
+```c
+z  = 0b0001 << 0 = 0b0001
+s  = 0b0000 << 1 = 0b0000
+p  = 0b0001 << 2 = 0b0100
+cy = 0b0001 << 3 = 0b1000
+ac = 0b0000 << 4 = 0b0000
+                 = 0b1101
+```
+
+So as you can see, it allows us to line the flags up so we can generate a new number with them. I'm not sure why they're in the order they are though. Maybe something to do with how they get stored or something.
 
 ## Helpful Resources
 
-- http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf - Intel 8080 manual. Really interesting and has a lot of really valuable references. Some of the instruction descriptions are a bit hard to understand though.
-- http://www.emulator101.com - tutorial for a lot of this, as well as inspiration for some of the instruction implementation.
-- http://www.classiccmp.org/dunfield/r/8080.txt - some explanation of the instructions, when the manual is a bit too terse.
-- https://ia601202.us.archive.org/25/items/IntroductionTo80808085AssemblyLanguageProgramming/introduction%20to%208080%208085%20assembly%20language%20programming.pdf - great textbook which goes a bit more in depth on assembly language for the 8080. I found it was helpful looking at it from the other side sometimes.
-- http://pastraiser.com/cpu/i8080/i8080_opcodes.html
+- <http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf> - Intel 8080 manual. Really interesting and has a lot of really valuable references. Some of the instruction descriptions are a bit hard to understand though.
+- <http://www.emulator101.com> - tutorial for a lot of this, as well as inspiration for some of the instruction implementation.
+- <http://www.classiccmp.org/dunfield/r/8080.txt> - some explanation of the instructions, when the manual is a bit too terse.
+- <https://ia601202.us.archive.org/25/items/IntroductionTo80808085AssemblyLanguageProgramming/introduction%20to%208080%208085%20assembly%20language%20programming.pdf> - great textbook which goes a bit more in depth on assembly language for the 8080. I found it was helpful looking at it from the other side sometimes.
+- <http://pastraiser.com/cpu/i8080/i8080_opcodes.html>

@@ -924,8 +924,12 @@ int Emulate8080(State8080 *state)
     state->pc += 2;
     break;
   case 0x02: // STAX B - (BC) <- A // NOT SURE
-    UnimplementedInstruction(state);
-    break;
+  {
+    uint16_t offset = (state->b << 8) | state->c;
+    state->memory[offset] = state->a;
+    // state->pc += 2; I DONT THINK WE NEED THIS
+  }
+  break;
   case 0x03:
     UnimplementedInstruction(state);
     break;
@@ -967,9 +971,14 @@ int Emulate8080(State8080 *state)
   case 0x0C:
     UnimplementedInstruction(state);
     break;
-  case 0x0D:
-    UnimplementedInstruction(state);
-    break;
+  case 0x0D: // DCR C
+  {
+    uint8_t res = state->b - 1;
+    state->flags.z = (res == 0);
+    state->flags.s = (0x80 == (res & 0x80));
+    state->flags.p = parity(res, 8);
+  }
+  break;
   case 0x0E: // MVI C
     state->c = opcode[1];
     state->pc++;
@@ -987,9 +996,13 @@ int Emulate8080(State8080 *state)
     state->d = opcode[2];
     state->pc += 2;
     break;
-  case 0x12:
-    UnimplementedInstruction(state);
-    break;
+  case 0x12: // STAX D - 	(DE) <- A
+  {
+    uint16_t offset = (state->d << 8) | state->e;
+    state->memory[offset] = state->a;
+    // state->pc += 2;
+  }
+  break;
   case 0x13: // INX D  -  (DE) <- DE + 1
     state->e++;
     if (state->e == 0)
@@ -1494,9 +1507,18 @@ int Emulate8080(State8080 *state)
   case 0xA6:
     UnimplementedInstruction(state);
     break;
-  case 0xA7:
-    UnimplementedInstruction(state);
-    break;
+  case 0xA7: // ANA A - A <- A & A (Z, S, P, CY, AC)
+  {
+
+    uint8_t ret = state->a & state->a;
+    state->flags.z = (ret == 0);
+    state->flags.s = (0x80 == (ret & 0x80));
+    state->flags.p = parity(ret, 8);
+    state->flags.ac = state->flags.cy = 0;
+    state->a = ret;
+  }
+
+  break;
   case 0xA8:
     UnimplementedInstruction(state);
     break;
@@ -1800,9 +1822,14 @@ int Emulate8080(State8080 *state)
   case 0xF4:
     UnimplementedInstruction(state);
     break;
-  case 0xF5:
-    UnimplementedInstruction(state);
-    break;
+  case 0xF5: // PUSH PSW - 	(sp-2)<-flags; (sp-1)<-A; sp <- sp - 2
+  {
+    state->memory[state->sp - 1] = state->a;
+    uint8_t psw = (state->flags.z | state->flags.s << 1 | state->flags.p << 2 | state->flags.cy << 3 | state->flags.ac << 4);
+    state->memory[state->sp - 2] = psw;
+    state->sp = state->sp - 2;
+  }
+  break;
   case 0xF6:
     UnimplementedInstruction(state);
     break;
