@@ -10,7 +10,7 @@ typedef struct Flags
   uint8_t s : 1;   // sign flag
   uint8_t p : 1;   // parity flag
   uint8_t cy : 1;  // carry flag
-  uint8_t ac : 1;  // auxilary carry falg
+  uint8_t ac : 1;  // auxilary carry flag
   uint8_t pad : 3; // parity flag
 } Flags;
 
@@ -889,6 +889,28 @@ int parity(int x, int size)
   return (0 == (p & 0x1));
 }
 
+void MachineOUT(uint8_t port)
+{
+  printf("#$%02x !!!", port);
+}
+
+uint8_t MachineIn(State8080 *state, uint8_t port)
+{
+  {
+    // switch (port)
+    // {
+    // case 2:
+    //   shift_offset = value & 0x7;
+    //   break;
+    // case 4:
+    //   shift0 = shift1;
+    //   shift1 = value;
+    //   break;
+    // }
+    return 1;
+  }
+}
+
 void UnimplementedInstruction(State8080 *state)
 {
   state->pc--; // pc incremented at start of emulate8080, undo that.
@@ -927,7 +949,7 @@ int Emulate8080(State8080 *state)
   {
     uint16_t offset = (state->b << 8) | state->c;
     state->memory[offset] = state->a;
-    // state->pc += 2; I DONT THINK WE NEED THIS
+    state->pc += 2;
   }
   break;
   case 0x03:
@@ -959,7 +981,7 @@ int Emulate8080(State8080 *state)
     uint32_t res = hl + bc;
     state->h = (res & 0xff00) >> 8;
     state->l = res & 0xff;
-    state->flags.cy = ((res & 0xffff0000) != 0);
+    state->flags.cy = ((res & 0xffff0000) > 0);
   }
   break;
   case 0x0A:
@@ -973,10 +995,11 @@ int Emulate8080(State8080 *state)
     break;
   case 0x0D: // DCR C
   {
-    uint8_t res = state->b - 1;
+    uint8_t res = state->c - 1;
     state->flags.z = (res == 0);
     state->flags.s = (0x80 == (res & 0x80));
     state->flags.p = parity(res, 8);
+    state->c = res;
   }
   break;
   case 0x0E: // MVI C
@@ -1000,7 +1023,7 @@ int Emulate8080(State8080 *state)
   {
     uint16_t offset = (state->d << 8) | state->e;
     state->memory[offset] = state->a;
-    // state->pc += 2;
+    state->pc += 2;
   }
   break;
   case 0x13: // INX D  -  (DE) <- DE + 1
@@ -1109,7 +1132,9 @@ int Emulate8080(State8080 *state)
   case 0x2E: // MVI L - L <- byte 2
   {
     state->l = opcode[1];
-    state->pc++;
+    // state->pc++;
+    // NOT SURE
+    state->sp++;
   }
   break;
   case 0x2F:
@@ -1137,7 +1162,7 @@ int Emulate8080(State8080 *state)
   case 0x35:
     UnimplementedInstruction(state);
     break;
-  case 0x36: // MVI M  -  NOT SURE
+  case 0x36: // MVI M
   {
     uint16_t offset = (state->h << 8) | state->l;
     state->memory[offset] = opcode[1];
@@ -1161,15 +1186,15 @@ int Emulate8080(State8080 *state)
   case 0x3B:
     UnimplementedInstruction(state);
     break;
-  case 0x3C: // INR A - A <- A + 1 - NOT SURE
+  case 0x3C: // INR A - A <- A + 1
   {
     state->a = state->a + 1;
     state->flags.z = ((state->a & 0xff) == 0);
-    state->flags.p = parity(state->a, 8);
     state->flags.s = (state->a & 0x80);
+    state->flags.p = parity(state->a, 8);
   }
   break;
-  case 0x3D: // DCR A - A <- A - 1
+  case 0x3D: // DCR A - A <- A - 1 - NOT SURE
   {
     uint8_t res = state->a - 1;
     state->flags.z = (res == 0);
@@ -1253,9 +1278,12 @@ int Emulate8080(State8080 *state)
   case 0x55:
     UnimplementedInstruction(state);
     break;
-  case 0x56:
-    UnimplementedInstruction(state);
-    break;
+  case 0x56: // MOV D,M
+  {
+    uint16_t offset = (state->h << 8) | state->l;
+    state->d = state->memory[offset];
+  }
+  break;
   case 0x57:
     UnimplementedInstruction(state);
     break;
@@ -1274,9 +1302,12 @@ int Emulate8080(State8080 *state)
   case 0x5C:
     UnimplementedInstruction(state);
     break;
-  case 0x5D:
-    UnimplementedInstruction(state);
-    break;
+  case 0x5D: // MOV E,M
+  {
+    uint16_t offset = (state->h << 8) | state->l;
+    state->e = state->memory[offset];
+  }
+  break;
   case 0x5E:
     UnimplementedInstruction(state);
     break;
@@ -1302,9 +1333,12 @@ int Emulate8080(State8080 *state)
   case 0x65:
     UnimplementedInstruction(state);
     break;
-  case 0x66:
-    UnimplementedInstruction(state);
-    break;
+  case 0x66: // MOV H,M
+  {
+    uint16_t offset = (state->h << 8) | state->l;
+    state->h = state->memory[offset];
+  }
+  break;
   case 0x67: // MOV H,A
     state->h = state->a;
     break;
@@ -1509,15 +1543,12 @@ int Emulate8080(State8080 *state)
     break;
   case 0xA7: // ANA A - A <- A & A (Z, S, P, CY, AC)
   {
-
-    uint8_t ret = state->a & state->a;
-    state->flags.z = (ret == 0);
-    state->flags.s = (0x80 == (ret & 0x80));
-    state->flags.p = parity(ret, 8);
+    state->a = state->a & state->a;
     state->flags.ac = state->flags.cy = 0;
-    state->a = ret;
+    state->flags.z = (state->a == 0);
+    state->flags.s = (0x80 == (state->a & 0x80));
+    state->flags.p = parity(state->a, 8);
   }
-
   break;
   case 0xA8:
     UnimplementedInstruction(state);
@@ -1540,9 +1571,16 @@ int Emulate8080(State8080 *state)
   case 0xAE:
     UnimplementedInstruction(state);
     break;
-  case 0xAF:
-    UnimplementedInstruction(state);
-    break;
+  case 0xAF: // XRA A
+  {
+
+    state->a = state->a ^ state->a;
+    state->flags.cy = state->flags.ac = 0;
+    state->flags.z = (state->a == 0);
+    state->flags.s = (0x80 == (state->a & 0x80));
+    state->flags.p = parity(state->a, 8);
+  }
+  break;
 
   case 0xB0:
     UnimplementedInstruction(state);
@@ -1644,8 +1682,16 @@ int Emulate8080(State8080 *state)
     state->pc = state->memory[state->sp] | (state->memory[state->sp + 1] << 8);
     state->sp += 2;
     break;
-  case 0xCA:
-    UnimplementedInstruction(state);
+  case 0xCA: // JZ
+    if (state->flags.z == 1)
+    // we check if the zero flag is set, hence if it's 1.
+    {
+      state->pc = (opcode[2] << 8) | opcode[1];
+    }
+    else
+    {
+      state->pc += 2;
+    }
     break;
   case 0xCB:
     UnimplementedInstruction(state);
@@ -1674,12 +1720,21 @@ int Emulate8080(State8080 *state)
   case 0xD1:
     UnimplementedInstruction(state);
     break;
-  case 0xD2:
-    UnimplementedInstruction(state);
+  case 0xD2: // JNC
+    if (state->flags.cy == 0)
+    {
+      state->pc = (opcode[2] << 8) | opcode[1];
+    }
+    else
+    {
+      state->pc += 2;
+    }
     break;
-  case 0xD3: // OUT - SPECIAL
-             // TODO
+  case 0xD3: // OUT
+             // TODO: MOVE THIS INTO THE MAIN WHILE LOOP
+    // MachineOUT(opcode[1]);
     state->pc += 1;
+    // UnimplementedInstruction(state);
     break;
   case 0xD4:
     UnimplementedInstruction(state);
@@ -1714,8 +1769,9 @@ int Emulate8080(State8080 *state)
       state->pc += 2;
     }
     break;
-  case 0xDB:
-    UnimplementedInstruction(state);
+  case 0xDB: // IN
+    MachineIn(state, opcode[1]);
+    state->pc++;
     break;
   case 0xDC:
     UnimplementedInstruction(state);
@@ -1825,7 +1881,11 @@ int Emulate8080(State8080 *state)
   case 0xF5: // PUSH PSW - 	(sp-2)<-flags; (sp-1)<-A; sp <- sp - 2
   {
     state->memory[state->sp - 1] = state->a;
-    uint8_t psw = (state->flags.z | state->flags.s << 1 | state->flags.p << 2 | state->flags.cy << 3 | state->flags.ac << 4);
+    uint8_t psw = (state->flags.z |
+                   state->flags.s << 1 |
+                   state->flags.p << 2 |
+                   state->flags.cy << 3 |
+                   state->flags.ac << 4);
     state->memory[state->sp - 2] = psw;
     state->sp = state->sp - 2;
   }
@@ -1848,19 +1908,35 @@ int Emulate8080(State8080 *state)
   case 0xFB:
     UnimplementedInstruction(state);
     break;
-  case 0xFC:
+  case 0xFC: // CM - if (M) call adr
     UnimplementedInstruction(state);
     break;
   case 0xFD:
     UnimplementedInstruction(state);
     break;
-  case 0xFE:
-    UnimplementedInstruction(state);
-    break;
+  case 0xFE: // CPI
+  {
+    uint8_t x = state->a - opcode[1];
+    state->flags.z = (x == 0);
+    state->flags.s = (0x80 == (x & 0x80));
+    state->flags.p = parity(x, 8);
+    state->flags.cy = (state->a < opcode[1]);
+    state->pc++;
+  }
+  break;
   case 0xFF:
     UnimplementedInstruction(state);
     break;
   }
+  // Debugging information
+  printf("\tC=%d,P=%d,S=%d,Z=%d\n", state->flags.cy, state->flags.p,
+         state->flags.s, state->flags.z);
+  // printf("\tA $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x\n",
+  //        state->a, state->b, state->c, state->d,
+  //        state->e, state->h, state->l, state->sp);
+  printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x\n",
+         state->a, state->b, state->c, state->d,
+         state->e, state->h, state->l, state->sp);
   return 1;
 }
 
@@ -1908,11 +1984,25 @@ int main(int argc, char **argv)
   // initialise the state
   // load file into memory
 
+  // Space Invaders
   ReadFileIntoMemoryAt(state, "invaders.h", 0);
   ReadFileIntoMemoryAt(state, "invaders.g", 0x800);
   ReadFileIntoMemoryAt(state, "invaders.f", 0x1000);
   ReadFileIntoMemoryAt(state, "invaders.e", 0x1800);
   // memory map here http://www.emutalk.net/threads/38177-Space-Invaders
+
+  // CPU Diagnostics (for testing purposes)
+  // ReadFileIntoMemoryAt(state, "cpudiag.bin", 0x100);
+  // // Fix first instruction to be JMP 0x100
+  // state->memory[0] = 0xC3;
+  // state->memory[1] = 0;
+  // state->memory[2] = 0x01;
+  // // Fix stack pointer from 0x6ad to 0x7ad (which is buggy apparently)
+  // state->memory[368] = 0x7;
+  // // Skip DAA test
+  // state->memory[0x59C] = 0xC3;
+  // state->memory[0x59D] = 0xC2;
+  // state->memory[0x59E] = 0x05;
 
   while (1)
   {

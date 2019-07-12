@@ -137,3 +137,6 @@ So as you can see, it allows us to line the flags up so we can generate a new nu
 - <http://www.classiccmp.org/dunfield/r/8080.txt> - some explanation of the instructions, when the manual is a bit too terse.
 - <https://ia601202.us.archive.org/25/items/IntroductionTo80808085AssemblyLanguageProgramming/introduction%20to%208080%208085%20assembly%20language%20programming.pdf> - great textbook which goes a bit more in depth on assembly language for the 8080. I found it was helpful looking at it from the other side sometimes.
 - <http://pastraiser.com/cpu/i8080/i8080_opcodes.html>
+
+Plus a few other emulators that I've had a look at during this process:
+<https://github.com/superzazu/8080/blob/master/i8080.c>, <https://github.com/pbodsk/8080emulator/blob/master/emulator/emulator.c>, <https://github.com/forbesb/eightyeighty/blob/master/8080CPU.c>
