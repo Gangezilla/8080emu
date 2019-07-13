@@ -130,6 +130,8 @@ ac = 0b0000 << 4 = 0b0000
 
 So as you can see, it allows us to line the flags up so we can generate a new number with them. I'm not sure why they're in the order they are though. Maybe something to do with how they get stored or something.
 
+### Why do we want to enable interrupts? (0xFB)
+
 ## Helpful Resources
 
 - <http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf> - Intel 8080 manual. Really interesting and has a lot of really valuable references. Some of the instruction descriptions are a bit hard to understand though.

@@ -1312,8 +1312,11 @@ int Emulate8080(State8080 *state)
   }
   break;
   case 0x5E:
-    UnimplementedInstruction(state);
-    break;
+  {
+    uint16_t offset = (state->h << 8) | (state->l);
+    state->e = state->memory[offset];
+  }
+  break;
   case 0x5F:
     UnimplementedInstruction(state);
     break;
@@ -1403,11 +1406,11 @@ int Emulate8080(State8080 *state)
   case 0x79:
     UnimplementedInstruction(state);
     break;
-  case 0x7A:
-    UnimplementedInstruction(state);
+  case 0x7A: // MOV A,D
+    state->a = state->d;
     break;
-  case 0x7B:
-    UnimplementedInstruction(state);
+  case 0x7B: // MOV E,A
+    state->a = state->e;
     break;
   case 0x7C: // MOV A,H
     state->a = state->h;
@@ -1666,8 +1669,16 @@ int Emulate8080(State8080 *state)
   }
   break;
   case 0xC6:
-    UnimplementedInstruction(state);
-    break;
+  {
+    uint16_t x = (uint16_t)state->a + (uint16_t)opcode[1];
+    state->flags.z = ((x & 0xff) == 0);
+    state->flags.s = (0x80 == (x & 0x80));
+    state->flags.p = parity((x & 0xff), 8);
+    state->flags.cy = (x > 0xff);
+    state->a = (uint8_t)x;
+    state->pc++;
+  }
+  break;
   case 0xC7:
     UnimplementedInstruction(state);
     break;
@@ -1715,7 +1726,9 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
   case 0xD1:
-    UnimplementedInstruction(state);
+    state->e = state->memory[state->sp];
+    state->d = state->memory[state->sp + 1];
+    state->sp += 2;
     break;
   case 0xD2: // JNC
     if (state->flags.cy == 0)
@@ -1902,8 +1915,8 @@ int Emulate8080(State8080 *state)
   case 0xFA:
     UnimplementedInstruction(state);
     break;
-  case 0xFB:
-    UnimplementedInstruction(state);
+  case 0xFB: // EI
+    state->int_enable = 1;
     break;
   case 0xFC: // CM - if (M) call adr
     UnimplementedInstruction(state);
