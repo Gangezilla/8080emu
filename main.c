@@ -889,7 +889,7 @@ int parity(int x, int size)
   return (0 == (p & 0x1));
 }
 
-void MachineOUT(uint8_t port)
+void MachineOUT(State8080 *state, uint8_t port)
 {
   printf("#$%02x !!!", port);
 }
@@ -1744,7 +1744,6 @@ int Emulate8080(State8080 *state)
              // TODO: MOVE THIS INTO THE MAIN WHILE LOOP
     // MachineOUT(opcode[1]);
     state->pc += 1;
-    // UnimplementedInstruction(state);
     break;
   case 0xD4:
     UnimplementedInstruction(state);
@@ -1780,7 +1779,7 @@ int Emulate8080(State8080 *state)
     }
     break;
   case 0xDB: // IN
-    MachineIn(state, opcode[1]);
+    // MachineIn(state, opcode[1]);
     state->pc++;
     break;
   case 0xDC:
@@ -1991,8 +1990,6 @@ int main(int argc, char **argv)
 {
   int done = 0;
   State8080 *state = Init8080();
-  // initialise the state
-  // load file into memory
 
   // Space Invaders
   ReadFileIntoMemoryAt(state, "invaders.h", 0);
@@ -2016,7 +2013,24 @@ int main(int argc, char **argv)
 
   while (1)
   {
-    done = Emulate8080(state);
+    uint8_t *opcode = state->memory[state->pc];
+
+    if (*opcode == 0xDB) // IN
+    {
+      uint8_t port = opcode[1];
+      state->a = MachineIN(state, port);
+      state->pc++;
+    }
+    else if (*opcode == 0xD3) // OUT
+    {
+      uint8_t port = opcode[1];
+      MachineOUT(state, port);
+      state->pc++;
+    }
+    else
+    {
+      done = Emulate8080(state);
+    }
   }
   return 0;
 }

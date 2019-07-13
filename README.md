@@ -132,13 +132,26 @@ So as you can see, it allows us to line the flags up so we can generate a new nu
 
 ### Why do we want to enable interrupts? (0xFB)
 
+Interrupts are included on many CPUs as a way of improving the processor's efficiency. The Intel 8080 handbook gives an example of interfacing with a printer, where you output a byte of data, but the printer may take a longer time to process that byte. You could then use interrupts to space out the way that you send these bytes. It's implemented externally, so the printer in this example can request an interrupt. This means that when the printer is processing, the CPU can continue doing it's own thing. Then when the printer is ready, it can interrupt the CPU and request more data.
+
+It's used in the Space Invaders to display pixels on screen. According to this page <http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html>, Space Invaders has 2 video interrupts. One is at the end of the frame, and one is generated in the middle of the screen. The game draws the top half of the screen after it receives the mid-screen interrupt, and then draws the bottom half after it receives the end interrupt, which is done to avoid screen tearing.
+
+### What's a "word"?
+
+A word is a unit of data used in processor design. It's fixed size, and handled as part of the instruction set. In this instance, we have 8 bit words, and I think sometimes it's used in the context of 16 bit words too. <https://en.wikichip.org/wiki/intel/mcs-80/8080>
+
+### What's the shift register component of the Space Invaders machine?
+
+The 8080 instruction set does not include opcodes for bit shifting multiple bits. However, you need to do this because you're shifting an 8 bit pixel image into a 16 bit word to get it into the right position on screen. To get around this, Space Invaders has a dedicated shift register component. So instead of needing tens of 8080 instructions to implement a multi-bit/multi-byte shift, the shift register can do it in a few instructions. It's broken down pretty well here <http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html>.
+
 ## Helpful Resources
 
 - <http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf> - Intel 8080 manual. Really interesting and has a lot of really valuable references. Some of the instruction descriptions are a bit hard to understand though.
 - <http://www.emulator101.com> - tutorial for a lot of this, as well as inspiration for some of the instruction implementation.
 - <http://www.classiccmp.org/dunfield/r/8080.txt> - some explanation of the instructions, when the manual is a bit too terse.
-- <https://ia601202.us.archive.org/25/items/IntroductionTo80808085AssemblyLanguageProgramming/introduction%20to%208080%208085%20assembly%20language%20programming.pdf> - great textbook which goes a bit more in depth on assembly language for the 8080. I found it was helpful looking at it from the other side sometimes.
+- <https://ia601202.us.archive.org/25/items/IntroductionTo80808085AssemblyLanguageProgramming/introduction%20to%208080%208085%20assembly%20language%20programming.pdf>, great textbook which goes a bit more in depth on assembly language for the 8080. I found it was helpful looking at it from the other side sometimes.
 - <http://pastraiser.com/cpu/i8080/i8080_opcodes.html>
+- <http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html>
 
 Plus a few other emulators that I've had a look at during this process:
 <https://github.com/superzazu/8080/blob/master/i8080.c>, <https://github.com/pbodsk/8080emulator/blob/master/emulator/emulator.c>, <https://github.com/forbesb/eightyeighty/blob/master/8080CPU.c>
