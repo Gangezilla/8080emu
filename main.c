@@ -2037,15 +2037,13 @@ int main(int argc, char **argv)
     if (*opcode == 0xDB) // IN
     {
       uint8_t port = opcode[1];
-      // printf("%d\n\n\n\n!!!!!!!!!!!!!\n\n\n", opcode);
-      // state->a = MachineIN(state, port);
+      state->a = MachineIN(state, port);
       state->pc++;
     }
     else if (*opcode == 0xD3) // OUT
     {
-      // uint8_t port = opcode[1];
-      // printf("\n\n\n\n!!!!!!!!!!!!!%d\n\n\n", port);
-      // MachineOUT(state, port);
+      uint8_t port = opcode[1];
+      MachineOUT(state, port);
       state->pc++;
     }
     else

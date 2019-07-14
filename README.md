@@ -211,7 +211,7 @@ You'll also see examples like this sometimes too `6 &= 0xDF`. This is the same a
 
 #### Toggling bits
 
-We use XOR with 1 toggle a bit, which will always flip a 0 to a 1, and a 1 to a 0. The formula for this looks like `x ^= (1 << n)`. Side note, XOR is a logical operation short for exclusive or if ONLY one bit is set. It's function table looks like this:
+We use XOR with 1 to toggle a bit, which will always flip a 0 to a 1, and a 1 to a 0. The formula for this looks like `x ^= (1 << n)`. Side note, XOR is a logical operation short for exclusive or if ONLY one bit is set. It's function table looks like this:
 
 ```
 a | b | a ^ b |
@@ -239,6 +239,7 @@ Examples of this look like:
 - <https://ia601202.us.archive.org/25/items/IntroductionTo80808085AssemblyLanguageProgramming/introduction%20to%208080%208085%20assembly%20language%20programming.pdf>, great textbook which goes a bit more in depth on assembly language for the 8080. I found it was helpful looking at it from the other side sometimes.
 - <http://pastraiser.com/cpu/i8080/i8080_opcodes.html>
 - <http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html>
+- <https://www.walkofmind.com/programming/side/side.htm>
 
 Plus a few other emulators that I've had a look at during this process:
 
