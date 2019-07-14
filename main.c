@@ -890,23 +890,44 @@ int parity(int x, int size)
 }
 
 void MachineOUT(State8080 *state, uint8_t port)
+// has 2,3,4,5,6
 {
-  printf("#$%02x !!!", port);
+  switch (port)
+  {
+  case 2:
+    // shift register result offset (bits 0,1,2)
+    break;
+  case 3:
+    // play a sound of some kind
+    break;
+  case 4:
+    // fill shift register
+    break;
+  case 5:
+    // play a different sound
+    break;
+  case 6:
+    // debug port?
+    break;
+  }
 }
 
-uint8_t MachineIn(State8080 *state, uint8_t port)
+uint8_t MachineIN(State8080 *state, uint8_t port)
+// has 1,2,3
 {
   {
-    // switch (port)
-    // {
-    // case 2:
-    //   shift_offset = value & 0x7;
-    //   break;
-    // case 4:
-    //   shift0 = shift1;
-    //   shift1 = value;
-    //   break;
-    // }
+    switch (port)
+    {
+    case 1:
+
+      break;
+    case 2:
+
+      break;
+    case 3:
+
+      break;
+    }
     return 1;
   }
 }
@@ -1740,11 +1761,9 @@ int Emulate8080(State8080 *state)
       state->pc += 2;
     }
     break;
-  case 0xD3: // OUT
-             // TODO: MOVE THIS INTO THE MAIN WHILE LOOP
-    // MachineOUT(opcode[1]);
-    state->pc += 1;
-    break;
+  // case 0xD3: // OUT
+  //   state->pc += 1;
+  //   break;
   case 0xD4:
     UnimplementedInstruction(state);
     break;
@@ -1778,10 +1797,10 @@ int Emulate8080(State8080 *state)
       state->pc += 2;
     }
     break;
-  case 0xDB: // IN
-    // MachineIn(state, opcode[1]);
-    state->pc++;
-    break;
+  // case 0xDB: // IN
+  //   // MachineIn(state, opcode[1]);
+  //   state->pc++;
+  //   break;
   case 0xDC:
     UnimplementedInstruction(state);
     break;
@@ -2013,18 +2032,20 @@ int main(int argc, char **argv)
 
   while (1)
   {
-    uint8_t *opcode = state->memory[state->pc];
+    uint8_t *opcode = &state->memory[state->pc];
 
     if (*opcode == 0xDB) // IN
     {
       uint8_t port = opcode[1];
-      state->a = MachineIN(state, port);
+      // printf("%d\n\n\n\n!!!!!!!!!!!!!\n\n\n", opcode);
+      // state->a = MachineIN(state, port);
       state->pc++;
     }
     else if (*opcode == 0xD3) // OUT
     {
-      uint8_t port = opcode[1];
-      MachineOUT(state, port);
+      // uint8_t port = opcode[1];
+      // printf("\n\n\n\n!!!!!!!!!!!!!%d\n\n\n", port);
+      // MachineOUT(state, port);
       state->pc++;
     }
     else

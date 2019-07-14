@@ -142,7 +142,94 @@ A word is a unit of data used in processor design. It's fixed size, and handled 
 
 ### What's the shift register component of the Space Invaders machine?
 
-The 8080 instruction set does not include opcodes for bit shifting multiple bits. However, you need to do this because you're shifting an 8 bit pixel image into a 16 bit word to get it into the right position on screen. To get around this, Space Invaders has a dedicated shift register component. So instead of needing tens of 8080 instructions to implement a multi-bit/multi-byte shift, the shift register can do it in a few instructions. It's broken down pretty well here <http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html>.
+The 8080 instruction set does not include opcodes for bit shifting multiple bits. However, you need to do this because you're shifting an 8 bit pixel image into a 16 bit word to get it into the right position on screen. To get around this, Space Invaders has a dedicated shift register component. So instead of needing tens of 8080 instructions to implement a multi-bit/multi-byte shift, the shift register can do it in a few instructions. It's broken down pretty well here <http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html>, which I'll replicate here:
+
+```
+f              0	bit
+xxxxxxxxyyyyyyyy
+
+Writing to port 4 shifts x into y, and the new value into x, eg.
+$0000,
+write $aa -> $aa00,
+write $ff -> $ffaa,
+write $12 -> $12ff, ..
+
+Writing to port 2 (bits 0,1,2) sets the offset for the 8 bit result, eg.
+offset 0:
+rrrrrrrr		result=xxxxxxxx
+xxxxxxxxyyyyyyyy
+
+offset 2:
+  rrrrrrrr	result=xxxxxxyy
+xxxxxxxxyyyyyyyy
+
+offset 7:
+       rrrrrrrr	result=xyyyyyyy
+xxxxxxxxyyyyyyyy
+
+Reading from port 3 returns said result.
+```
+
+### Tell me about bit manipulation.
+
+Grabbed from here <http://www.goldsborough.me/bits/c++/low-level/problems/2015/10/11/23-52-02-bit_manipulation/>
+
+#### Setting bits
+
+You will want to set a bit when you want to change one of the individual bits in a byte to 1. The easiest way to do this is the OR operation, because it will always set a bit to 1. To set the nth bit (starting at 0) of a value x: `x = x | (1 << n)`
+
+```
+0000 | (1 << 0) = 0000 | 0001 = 0001
+1000 | (1 << 1) = 1000 | 0001 = 1010
+```
+
+We also see this in some places, like this (let's assume x is 1):
+
+```
+x |= 0x20 // set bit 5 of x
+x = x | 0x20
+0b0000_0001 | 0b0010_0000 = 0b0010_0001
+```
+
+This retains the original bit, and also sets the new one.
+
+#### Clearing bits
+
+Clearing a bit is the opposite of setting one, that is, when you want to change an individual bit to 0. The easiest way to do this is with the AND operation. To clear a bit we use the AND and NOT operators. You create a bit-mask (which defines which bits you want to keep and which you want to clear) where all bits are set EXCEPT for the one you want to clear. The formula of this looks like: `x &= ~(1 << n)`.
+
+```
+0111 & ~(1 << 0) = 0111 & 1110 = 0110
+0100 & ~(1 << 2) = 0100 & 1101 = 0000 // is 64, but its a 4 bit number so we lose precision...
+```
+
+You'll also see examples like this sometimes too `6 &= 0xDF`. This is the same as above for clearing bit 5, it's just the binary inverse already, so you don't need to and it.
+
+```
+  6 = 0b0000_0110
+  0xDF = 0b1101_1111, but ~(0xDF) = 0010_0000 which is the 5th bit
+```
+
+#### Toggling bits
+
+We use XOR with 1 toggle a bit, which will always flip a 0 to a 1, and a 1 to a 0. The formula for this looks like `x ^= (1 << n)`. Side note, XOR is a logical operation short for exclusive or if ONLY one bit is set. It's function table looks like this:
+
+```
+a | b | a ^ b |
+--|---|-------|
+0 | 0 |   0   |
+0 | 1 |   1   |
+1 | 0 |   1   |
+1 | 1 |   0   |
+---------------
+
+```
+
+Examples of this look like:
+
+```
+0010 ^ (1 << 1) = 0010 ^ 0010 = 0000
+0110 ^ (1 << 0) = 0110 ^ 0010 = 0111
+```
 
 ## Helpful Resources
 
@@ -154,4 +241,7 @@ The 8080 instruction set does not include opcodes for bit shifting multiple bits
 - <http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html>
 
 Plus a few other emulators that I've had a look at during this process:
-<https://github.com/superzazu/8080/blob/master/i8080.c>, <https://github.com/pbodsk/8080emulator/blob/master/emulator/emulator.c>, <https://github.com/forbesb/eightyeighty/blob/master/8080CPU.c>
+
+- <https://github.com/superzazu/8080/blob/master/i8080.c>
+- <https://github.com/pbodsk/8080emulator/blob/master/emulator/emulator.c>
+- <https://github.com/forbesb/eightyeighty/blob/master/8080CPU.c>
