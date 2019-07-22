@@ -2033,6 +2033,8 @@ int main(int argc, char **argv)
   while (1)
   {
     uint8_t *opcode = &state->memory[state->pc];
+    // listen for key events here
+    // set byte in there and then check it in IN
 
     if (*opcode == 0xDB) // IN
     {

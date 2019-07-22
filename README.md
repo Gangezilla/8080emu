@@ -221,7 +221,6 @@ a | b | a ^ b |
 1 | 0 |   1   |
 1 | 1 |   0   |
 ---------------
-
 ```
 
 Examples of this look like:
