@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#include "8080emu.h"
 
 @interface SpaceInvadersMachine : NSObject
 
