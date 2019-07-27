@@ -82,12 +82,33 @@ static uint8_t ReadFromHL(State8080 *state)
     return state->memory[offset];
 }
 
+static void WriteToHL(State8080* state, uint8_t value)
+{
+    uint16_t offset = (state-> h << 8) | state->l;
+    WriteMem(state, offset, value);
+}
+
 static void LogicFlagsA(State8080 *state)
 {
     state->flags.cy = state->flags.ac = 0;
     state->flags.z = (state->a == 0);
     state->flags.s = (0x80 == (state->a & 0x80));
     state->flags.p = parity(state->a, 8);
+}
+
+static void FlagsZSP(State8080 *state, uint8_t value)
+{
+    state->flags.z = (value == 0);
+    state->flags.s = (0x80 == (value & 0x80));
+    state->flags.p = parity(value, 8);
+}
+
+static void ArithFlagsA(State8080 *state, uint16_t res)
+{
+    state->flags.cy = (res > 0xff);
+    state->flags.z = ((res & 0xff) == 0);
+    state->flags.s = (0x80 == (res & 0x80));
+    state->flags.p = parity(res & 0xff, 8);
 }
 
 int Emulate8080(State8080 *state)
@@ -170,19 +191,21 @@ int Emulate8080(State8080 *state)
             state->a = state->memory[offset];
         }
             break;
-        case 0x0B:
-            UnimplementedInstruction(state);
+        case 0x0B: // DCX B
+            state->c++;
+            if(state->c == 0)
+            {
+                state->b--;
+            }
             break;
-        case 0x0C:
-            UnimplementedInstruction(state);
+        case 0x0C: // INR C
+            state->c++;
+            FlagsZSP(state, state->c);
             break;
         case 0x0D: // DCR C
         {
-            uint8_t res = state->c - 1;
-            state->flags.z = (res == 0);
-            state->flags.s = (0x80 == (res & 0x80));
-            state->flags.p = parity(res, 8);
-            state->c = res;
+            state->c--;
+            FlagsZSP(state, state->c);
         }
             break;
         case 0x0E: // MVI C
@@ -205,8 +228,7 @@ int Emulate8080(State8080 *state)
         case 0x12: // STAX D -     (DE) <- A
         {
             uint16_t offset = (state->d << 8) | state->e;
-            state->memory[offset] = state->a;
-            state->pc += 2;
+            WriteMem(state, offset, state->a);
         }
             break;
         case 0x13: // INX D  -  (DE) <- DE + 1
@@ -216,17 +238,25 @@ int Emulate8080(State8080 *state)
                 state->d++;
             }
             break;
-        case 0x14:
-            UnimplementedInstruction(state);
+        case 0x14: // INR D
+            state->d++;
+            FlagsZSP(state, state->d);
             break;
-        case 0x15:
-            UnimplementedInstruction(state);
+        case 0x15: // DCR D
+            state->d--;
+            FlagsZSP(state, state->d);
             break;
-        case 0x16:
-            UnimplementedInstruction(state);
+        case 0x16: // MVI D, byte
+            state->d = opcode[1];
+            state->pc++;
             break;
-        case 0x17:
-            UnimplementedInstruction(state);
+        case 0x17: // RAL - A = A << 1; bit 0 = prev CY; CY = prev bit 7
+        {
+            uint8_t x = state->a;
+            state->a = state->flags.cy | (x << 1);
+            state-> flags.cy = (0x80 == (x & 0x80));
+        }
+ 
             break;
         case 0x19: // DAD D    -   HL = HL + DE
         {
@@ -244,20 +274,31 @@ int Emulate8080(State8080 *state)
             state->a = state->memory[offset];             // stores the content of that location in register a.
         }
             break;
-        case 0x1B:
-            UnimplementedInstruction(state);
+        case 0x1B: // DCX D
+            state->e++;
+            if(state->e == 0)
+            {
+                state->d--;
+            }
             break;
-        case 0x1C:
-            UnimplementedInstruction(state);
+        case 0x1C: // INR E
+            state->e++;
+            FlagsZSP(state, state->e);
             break;
-        case 0x1D:
-            UnimplementedInstruction(state);
+        case 0x1D: // DCR E
+            state->e--;
+            FlagsZSP(state, state->e);
             break;
-        case 0x1E:
-            UnimplementedInstruction(state);
+        case 0x1E: // MVI E
+            state->e = opcode[1];
+            state->pc++;
             break;
-        case 0x1F:
-            UnimplementedInstruction(state);
+        case 0x1F: // RAR
+            {
+                uint8_t x = state->a;
+                state->a = (state->flags.cy << 7) | (x >> 1);
+                state->flags.cy = (1 == (x & 1));
+            }
             break;
 
         case 0x21: // LXI H
@@ -265,8 +306,14 @@ int Emulate8080(State8080 *state)
             state->h = opcode[2];
             state->pc += 2;
             break;
-        case 0x22:
-            UnimplementedInstruction(state);
+        case 0x22: // SHLD
+        {
+            uint16_t offset = opcode[1] | (opcode[2] << 8);
+            WriteMem(state, offset, state->l);
+            WriteMem(state, offset + 1, state->h);
+        }
+            
+            state->pc += 2;
             break;
         case 0x23: //   INX H    -    (HL) <- HL + 1
             state->l++;
@@ -277,18 +324,29 @@ int Emulate8080(State8080 *state)
             // pretty sure we do this cos we want to add to reg l,
             // but if it becomes 0, it has overflowed so we add to reg h.
             break;
-        case 0x24:
-            UnimplementedInstruction(state);
+        case 0x24: // INR H
+            state->h++;
+            FlagsZSP(state, state->h);
             break;
-        case 0x25:
-            UnimplementedInstruction(state);
+        case 0x25: // DCR H
+            state->h--;
+            FlagsZSP(state, state->h);
             break;
         case 0x26: // MVI H
             state->h = opcode[1];
             state->pc++;
             break;
-        case 0x27:
-            UnimplementedInstruction(state);
+        case 0x27: // DAA
+            if ((state->a & 0xf) > 9)
+            {
+                state->a += 6;
+            }
+            if ((state->a & 0xf0) > 0x90)
+            {
+                uint16_t res = (uint16_t) state->a + 0x60;
+                state->a = res & 0xff;
+                ArithFlagsA(state, res);
+            }
             break;
         case 0x29: // DAD H
         {
@@ -300,28 +358,38 @@ int Emulate8080(State8080 *state)
             state->flags.cy = ((res & 0xffff0000) != 0);
         }
             break;
-        case 0x2A:
-            UnimplementedInstruction(state);
+        case 0x2A: // LHLD
+        {
+            uint16_t offset = opcode[1] | (opcode[2] << 8);
+            state->l = state->memory[offset];
+            state->h = state->memory[offset + 1];
+            state->pc += 2;
+        }
+            
             break;
-        case 0x2B:
-            UnimplementedInstruction(state);
+        case 0x2B: // DCX H
+            state->l--;
+            if (state->l == 0xff)
+            {
+                state->h--;
+            }
             break;
-        case 0x2C:
-            UnimplementedInstruction(state);
+        case 0x2C: // INR L
+            state->l++;
+            FlagsZSP(state, state->l);
             break;
-        case 0x2D:
-            UnimplementedInstruction(state);
+        case 0x2D: // DCR L
+            state->l--;
+            FlagsZSP(state, state->l);
             break;
         case 0x2E: // MVI L - L <- byte 2
         {
             state->l = opcode[1];
-            // state->pc++;
-            // NOT SURE
-            state->sp++;
+            state->pc++;
         }
             break;
-        case 0x2F:
-            UnimplementedInstruction(state);
+        case 0x2F: // CMA
+            state->a = ~state->a;
             break;
         case 0x31: // LXI
             state->sp = (opcode[2] << 8) | opcode[1];
@@ -334,20 +402,21 @@ int Emulate8080(State8080 *state)
             state->pc += 2;
         }
             break;
-        case 0x33:
-            UnimplementedInstruction(state);
+        case 0x33: // INX SP
+            state->sp++;
             break;
-        case 0x34:
-            UnimplementedInstruction(state);
-            break;
-        case 0x35: // DCR M // NOT SURE
+        case 0x34: // INR M
         {
-            uint16_t offset = (state->h << 8) | state-> l;
-            uint8_t value = state->memory[offset] - 1;
-            state->flags.z = (value == 0);
-            state->flags.s = (0x80 == (value & 0x80));
-            state->flags.p = parity(value, 8);
-            WriteMem(state, offset, value);
+            uint8_t res = ReadFromHL(state) + 1;
+            FlagsZSP(state, res);
+            WriteToHL(state, res);
+        }
+            break;
+        case 0x35: // DCR M
+        {
+            uint8_t value = ReadFromHL(state) - 1;
+            FlagsZSP(state, value);
+            WriteToHL(state, value);
         }
             break;
         case 0x36: // MVI M
@@ -376,19 +445,14 @@ int Emulate8080(State8080 *state)
             break;
         case 0x3C: // INR A - A <- A + 1
         {
-            state->a = state->a + 1;
-            state->flags.z = ((state->a & 0xff) == 0);
-            state->flags.s = (state->a & 0x80);
-            state->flags.p = parity(state->a, 8);
+            state->a++;
+            FlagsZSP(state, state->a);
         }
             break;
         case 0x3D: // DCR A - A <- A - 1 - NOT SURE
         {
-            uint8_t res = state->a - 1;
-            state->flags.z = (res == 0);
-            state->flags.s = (0x80 == (res & 0x80));
-            state->flags.p = parity(res, 8);
-            state->a = res;
+            state->a--;
+            FlagsZSP(state, state->a);
         }
             break;
         case 0x3E: // MVI A
@@ -785,10 +849,7 @@ int Emulate8080(State8080 *state)
             break;
         case 0xB6: // ORA M NOT SURE
         {
-            uint16_t offset = (state-> h << 8) | state->l ;
-            uint8_t ret = state->memory[offset];
-            state->a = state->a | ret;
-            
+            state->a = state->a | ReadFromHL(state);            
             LogicFlagsA(state);
         }
             break;

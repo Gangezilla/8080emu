@@ -1,5 +1,7 @@
 # 8080emu
 
+Since I was a kid and I first downloaded a Gameboy emulator, I've always been so fascinated by how they worked. This is me going through the Emulator101 tutorial to get a Space Invaders emulator up and running :).
+
 ## Overview of 8080
 
 TODO
@@ -229,6 +231,8 @@ Examples of this look like:
 0010 ^ (1 << 1) = 0010 ^ 0010 = 0000
 0110 ^ (1 << 0) = 0110 ^ 0010 = 0111
 ```
+
+### What's going on in opcode 0x27, DAA?
 
 ## Helpful Resources
 
