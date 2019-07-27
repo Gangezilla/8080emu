@@ -56,3 +56,5 @@ dkms.conf
 
 8080emu-first50.c
 emulator101
+
+.DS_Store

@@ -4,7 +4,12 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>Space Invaders.xcscheme</key>
+		<key>Invaders.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>0</integer>
+		</dict>
+		<key>Invaders.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>

@@ -1,34 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "main.h"
+#include "8080emu.h"
 
-// uint8 is an unsigned char, can hold values  0 - 255.
-typedef struct Flags
-{
-  uint8_t z : 1;   // zero flag
-  uint8_t s : 1;   // sign flag
-  uint8_t p : 1;   // parity flag
-  uint8_t cy : 1;  // carry flag
-  uint8_t ac : 1;  // auxilary carry flag
-  uint8_t pad : 3; // parity flag
-} Flags;
-
-typedef struct State8080
-{
-  uint8_t a;
-  uint8_t b;
-  uint8_t c;
-  uint8_t d;
-  uint8_t e;
-  uint8_t h;
-  uint8_t l;
-  uint16_t sp; // stack pointer
-  uint16_t pc;
-  uint8_t *memory;
-  struct Flags flags;
-  uint8_t int_enable;
-} State8080;
+#define DEBUG 0
 
 unsigned char cycles8080[] = {
 	4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
@@ -911,49 +886,6 @@ int parity(int x, int size)
   return (0 == (p & 0x1));
 }
 
-void MachineOUT(State8080 *state, uint8_t port)
-// has 2,3,4,5,6
-{
-  switch (port)
-  {
-  case 2:
-    // shift register result offset (bits 0,1,2)
-    break;
-  case 3:
-    // play a sound of some kind
-    break;
-  case 4:
-    // fill shift register
-    break;
-  case 5:
-    // play a different sound
-    break;
-  case 6:
-    // debug port?
-    break;
-  }
-}
-
-uint8_t MachineIN(State8080 *state, uint8_t port)
-// has 1,2,3
-{
-  {
-    switch (port)
-    {
-    case 1:
-
-      break;
-    case 2:
-
-      break;
-    case 3:
-
-      break;
-    }
-    return 1;
-  }
-}
-
 void UnimplementedInstruction(State8080 *state)
 {
   state->pc--; // pc incremented at start of emulate8080, undo that.
@@ -962,14 +894,39 @@ void UnimplementedInstruction(State8080 *state)
   exit(1);
 }
 
+static void WriteMem(State8080* state, uint16_t address, uint8_t value)
+{
+  if (address < 0x2000)
+  {
+    printf("Writing ROM not allowed %x\n", address);
+    return;
+  }
+
+  if (address >= 0x4000)
+  {
+    printf("Writing out of Space Invaders RAM not allowed %x\n", address);
+    return;
+  }
+
+  state->memory[address] = value;
+}
+
+static void Push(State8080* state, uint8_t high, uint8_t low)
+{
+  WriteMem(state, state->sp - 1, high);
+  WriteMem(state, state->sp - 2, low);
+  state->sp = state->sp - 2;
+}
+
 int Emulate8080(State8080 *state)
 {
   // * turns a pointer into a value
   // & turns a value into a pointer
   // -> is used to access members of a struct when theyre a pointer.
-  int cycles = 4;
   unsigned char *opcode = &state->memory[state->pc];
-  Disassemble8080(state->memory, state->pc);
+  #if DEBUG // the # indicates a compile option.
+    Disassemble8080(state->memory, state->pc);
+  #endif
   state->pc += 1;
 
   switch (*opcode)
@@ -1978,102 +1935,22 @@ int Emulate8080(State8080 *state)
     UnimplementedInstruction(state);
     break;
   }
-  // Debugging information
-  printf("\tC=%d,P=%d,S=%d,Z=%d,AC=%d\n", state->flags.cy, state->flags.p,
+  #if DEBUG
+    printf("\tC=%d,P=%d,S=%d,Z=%d,AC=%d\n", state->flags.cy, state->flags.p,
          state->flags.s, state->flags.z, state->flags.ac);
-  // printf("\tA $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x\n",
-  //        state->a, state->b, state->c, state->d,
-  //        state->e, state->h, state->l, state->sp);
-  printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x PC %04x\n",
+    printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x PC %04x\n",
          state->a, state->b, state->c, state->d,
          state->e, state->h, state->l, state->sp, state->pc);
-  return 0;
+  #endif
+  return cycles8080[*opcode]
 }
 
-void ReadFileIntoMemoryAt(State8080 *state, char *filename, uint32_t offset)
-// open the filename, insert the contents into memory at offset
-// store this in the state memory
+void GenerateInterrupt(State8080* state, int interrupt_num)
 {
-  FILE *f = fopen(filename, "rb"); // r = read, b = binary. turns the pointer into a value.
-  if (f == NULL)
-  {
-    printf("error: Could not open %s\n", filename);
-    exit(1); // if the read fails, throw an error
-  }
-  fseek(f, 0L, SEEK_END);
-  // fseek changes the current file position associated with the stream to a new location in the file.
-  // here we set an offset of 0, and say to start from the end of the file. not quite sure why tho...
-  int fsize = ftell(f);
-  // ftell returns the current file position indicator.
-  fseek(f, 0L, SEEK_SET);
-  // the file position indicator is where in the file the stream is currently reading or writing.
-  // a stream is a generic interface for reading or writing (file, USB...)
-  // get the size of the file and then set indicator back to start.
-  uint8_t *buffer = &state->memory[offset];
-  // put a pointer to the buffer into memory at this particular offset
-  fread(buffer, fsize, 1, f);
-  // read the file into that buffer
-  fclose(f);
-  // close the file :)
-}
-
-State8080 *Init8080(void)
-{
-  State8080 *state = calloc(1, sizeof(State8080));
-  // calloc returns a pointer to enough free space for an array of arg_1 objects of the specified size.
-  // this storage is initalised to zero.
-  state->memory = malloc(0x10000); // 16K
-  // malloc returns a pointer to n bytes of uninit storage
-  return state;
-}
-
-int main(int argc, char **argv)
-{
-  int done = 0;
-  State8080 *state = Init8080();
-
-  // Space Invaders
-  ReadFileIntoMemoryAt(state, "invaders.h", 0);
-  ReadFileIntoMemoryAt(state, "invaders.g", 0x800);
-  ReadFileIntoMemoryAt(state, "invaders.f", 0x1000);
-  ReadFileIntoMemoryAt(state, "invaders.e", 0x1800);
-  // memory map here http://www.emutalk.net/threads/38177-Space-Invaders
-
-  // CPU Diagnostics (for testing purposes)
-  // ReadFileIntoMemoryAt(state, "cpudiag.bin", 0x100);
-  // // Fix first instruction to be JMP 0x100
-  // state->memory[0] = 0xC3;
-  // state->memory[1] = 0;
-  // state->memory[2] = 0x01;
-  // // Fix stack pointer from 0x6ad to 0x7ad (which is buggy apparently)
-  // state->memory[368] = 0x7;
-  // // Skip DAA test
-  // state->memory[0x59C] = 0xC3;
-  // state->memory[0x59D] = 0xC2;
-  // state->memory[0x59E] = 0x05;
-
-  while (1)
-  {
-    uint8_t *opcode = &state->memory[state->pc];
-    // listen for key events here
-    // set byte in there and then check it in IN
-
-    if (*opcode == 0xDB) // IN
-    {
-      uint8_t port = opcode[1];
-      state->a = MachineIN(state, port);
-      state->pc++;
-    }
-    else if (*opcode == 0xD3) // OUT
-    {
-      uint8_t port = opcode[1];
-      MachineOUT(state, port);
-      state->pc++;
-    }
-    else
-    {
-      done = Emulate8080(state);
-    }
-  }
-  return 0;
+  // perform "PUSH PC"
+  Push(state, (state->pc & 0xFF00) >> 8, (state->pc & 0xff));
+  // set PC to low memory vector
+  state->pc = 8 * interrupt_num;
+  // "DI"
+  state->int_enable = 0;
 }

@@ -18,17 +18,18 @@
 		04B0663C22E5CC0E00EADDDF /* invaders.e in Resources */ = {isa = PBXBuildFile; fileRef = 04B0663922E5CC0E00EADDDF /* invaders.e */; };
 		04B0663D22E5CC8000EADDDF /* invaders.f in Resources */ = {isa = PBXBuildFile; fileRef = 04B0663622E5CC0E00EADDDF /* invaders.f */; };
 		04B0663E22E5CC8400EADDDF /* invaders.h in Resources */ = {isa = PBXBuildFile; fileRef = 04B0663822E5CC0E00EADDDF /* invaders.h */; };
+		04EC69D822EC273F00B7608F /* 8080emu.c in Sources */ = {isa = PBXBuildFile; fileRef = 04EC69D722EC273F00B7608F /* 8080emu.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		04B0661A22E5C45700EADDDF /* Space Invaders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Space Invaders.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		04B0661A22E5C45700EADDDF /* Invaders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Invaders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		04B0661D22E5C45700EADDDF /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		04B0661E22E5C45700EADDDF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		04B0662022E5C45700EADDDF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		04B0662322E5C45700EADDDF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		04B0662522E5C45700EADDDF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		04B0662622E5C45700EADDDF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		04B0662822E5C45700EADDDF /* Space_Invaders.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Space_Invaders.entitlements; sourceTree = "<group>"; };
+		04B0662822E5C45700EADDDF /* Invaders.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Invaders.entitlements; sourceTree = "<group>"; };
 		04B0662E22E5C4C100EADDDF /* InvadersView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InvadersView.h; sourceTree = "<group>"; };
 		04B0662F22E5C4C100EADDDF /* InvadersView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InvadersView.m; sourceTree = "<group>"; };
 		04B0663122E5CB0000EADDDF /* SpaceInvadersMachine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SpaceInvadersMachine.h; sourceTree = "<group>"; };
@@ -37,6 +38,8 @@
 		04B0663722E5CC0E00EADDDF /* invaders.g */ = {isa = PBXFileReference; lastKnownFileType = file; name = invaders.g; path = ../../../invaders.g; sourceTree = "<group>"; };
 		04B0663822E5CC0E00EADDDF /* invaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = invaders.h; path = ../../../invaders.h; sourceTree = "<group>"; };
 		04B0663922E5CC0E00EADDDF /* invaders.e */ = {isa = PBXFileReference; lastKnownFileType = file; name = invaders.e; path = ../../../invaders.e; sourceTree = "<group>"; };
+		04EC69D622EC273F00B7608F /* 8080emu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = 8080emu.h; sourceTree = "<group>"; };
+		04EC69D722EC273F00B7608F /* 8080emu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = 8080emu.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,11 +56,13 @@
 		04B0661122E5C45700EADDDF = {
 			isa = PBXGroup;
 			children = (
+				04EC69D622EC273F00B7608F /* 8080emu.h */,
+				04EC69D722EC273F00B7608F /* 8080emu.c */,
 				04B0663122E5CB0000EADDDF /* SpaceInvadersMachine.h */,
 				04B0663222E5CB0000EADDDF /* SpaceInvadersMachine.m */,
 				04B0662E22E5C4C100EADDDF /* InvadersView.h */,
 				04B0662F22E5C4C100EADDDF /* InvadersView.m */,
-				04B0661C22E5C45700EADDDF /* Space Invaders */,
+				04B0661C22E5C45700EADDDF /* Invaders */,
 				04B0661B22E5C45700EADDDF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -65,12 +70,12 @@
 		04B0661B22E5C45700EADDDF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				04B0661A22E5C45700EADDDF /* Space Invaders.app */,
+				04B0661A22E5C45700EADDDF /* Invaders.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		04B0661C22E5C45700EADDDF /* Space Invaders */ = {
+		04B0661C22E5C45700EADDDF /* Invaders */ = {
 			isa = PBXGroup;
 			children = (
 				04B0663522E5CBEC00EADDDF /* Supporting Files */,
@@ -80,9 +85,9 @@
 				04B0662222E5C45700EADDDF /* MainMenu.xib */,
 				04B0662522E5C45700EADDDF /* Info.plist */,
 				04B0662622E5C45700EADDDF /* main.m */,
-				04B0662822E5C45700EADDDF /* Space_Invaders.entitlements */,
+				04B0662822E5C45700EADDDF /* Invaders.entitlements */,
 			);
-			path = "Space Invaders";
+			path = Invaders;
 			sourceTree = "<group>";
 		};
 		04B0663522E5CBEC00EADDDF /* Supporting Files */ = {
@@ -99,9 +104,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		04B0661922E5C45700EADDDF /* Space Invaders */ = {
+		04B0661922E5C45700EADDDF /* Invaders */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 04B0662B22E5C45700EADDDF /* Build configuration list for PBXNativeTarget "Space Invaders" */;
+			buildConfigurationList = 04B0662B22E5C45700EADDDF /* Build configuration list for PBXNativeTarget "Invaders" */;
 			buildPhases = (
 				04B0661622E5C45700EADDDF /* Sources */,
 				04B0661722E5C45700EADDDF /* Frameworks */,
@@ -111,9 +116,9 @@
 			);
 			dependencies = (
 			);
-			name = "Space Invaders";
-			productName = "Space Invaders";
-			productReference = 04B0661A22E5C45700EADDDF /* Space Invaders.app */;
+			name = Invaders;
+			productName = "Invaders";
+			productReference = 04B0661A22E5C45700EADDDF /* Invaders.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -131,7 +136,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 04B0661522E5C45700EADDDF /* Build configuration list for PBXProject "Space Invaders" */;
+			buildConfigurationList = 04B0661522E5C45700EADDDF /* Build configuration list for PBXProject "Invaders" */;
 			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -144,7 +149,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				04B0661922E5C45700EADDDF /* Space Invaders */,
+				04B0661922E5C45700EADDDF /* Invaders */,
 			);
 		};
 /* End PBXProject section */
@@ -171,6 +176,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				04B0662722E5C45700EADDDF /* main.m in Sources */,
+				04EC69D822EC273F00B7608F /* 8080emu.c in Sources */,
 				04B0663022E5C4C100EADDDF /* InvadersView.m in Sources */,
 				04B0663322E5CB0000EADDDF /* SpaceInvadersMachine.m in Sources */,
 				04B0661F22E5C45700EADDDF /* AppDelegate.m in Sources */,
@@ -299,12 +305,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = "Space Invaders/Space_Invaders.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Invaders/Invaders.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = "Space Invaders/Info.plist";
+				INFOPLIST_FILE = "Invaders/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "gangezilla.Space-Invaders";
+				PRODUCT_BUNDLE_IDENTIFIER = "gangezilla.Invaders";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -313,12 +319,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = "Space Invaders/Space_Invaders.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Invaders/Invaders.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = "Space Invaders/Info.plist";
+				INFOPLIST_FILE = "Invaders/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "gangezilla.Space-Invaders";
+				PRODUCT_BUNDLE_IDENTIFIER = "gangezilla.Invaders";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -326,7 +332,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		04B0661522E5C45700EADDDF /* Build configuration list for PBXProject "Space Invaders" */ = {
+		04B0661522E5C45700EADDDF /* Build configuration list for PBXProject "Invaders" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				04B0662922E5C45700EADDDF /* Debug */,
@@ -335,7 +341,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		04B0662B22E5C45700EADDDF /* Build configuration list for PBXNativeTarget "Space Invaders" */ = {
+		04B0662B22E5C45700EADDDF /* Build configuration list for PBXNativeTarget "Invaders" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				04B0662C22E5C45700EADDDF /* Debug */,
