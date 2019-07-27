@@ -430,8 +430,14 @@ int Emulate8080(State8080 *state)
         case 0x37: // STC
             state->flags.cy = 1;
             break;
-        case 0x39:
-            UnimplementedInstruction(state);
+        case 0x39: // DAD SP
+        {
+            uint32_t hl = (state->h << 8) | state->l;
+            uint32_t res = hl + state->sp;
+            state->h = (res & 0xff00) >> 8;
+            state->l = res & 0xff;
+            state->flags.cy = ((res & 0xffff0000) != 0);
+        }
             break;
         case 0x3A: // LDA - A <- (adr)
         {
@@ -440,8 +446,8 @@ int Emulate8080(State8080 *state)
             state->pc += 2;
             break;
         }
-        case 0x3B:
-            UnimplementedInstruction(state);
+        case 0x3B: // DCX SP
+            state->sp--;
             break;
         case 0x3C: // INR A - A <- A + 1
         {
@@ -460,7 +466,7 @@ int Emulate8080(State8080 *state)
             state->pc++;
             break;
         case 0x3F:
-            UnimplementedInstruction(state);
+            state->flags.cy = 0;
             break;
             
         case 0x40: // MOV B,B
@@ -487,48 +493,48 @@ int Emulate8080(State8080 *state)
         case 0x47: // MOV B,A
             state->b = state->a;
             break;
-        case 0x48:
-            UnimplementedInstruction(state);
+        case 0x48: // MOV C,B
+            state->c = state->b;
             break;
-        case 0x49:
-            UnimplementedInstruction(state);
+        case 0x49: // MOV C,C
+            state->c = state->c;
             break;
-        case 0x4A:
-            UnimplementedInstruction(state);
+        case 0x4A: // MOV C,D
+            state->c = state->d;
             break;
-        case 0x4B:
-            UnimplementedInstruction(state);
+        case 0x4B: // MOV C,E
+            state->c = state->e;
             break;
-        case 0x4C:
-            UnimplementedInstruction(state);
+        case 0x4C: // MOV C,H
+            state->c = state->h;
             break;
-        case 0x4D:
-            UnimplementedInstruction(state);
+        case 0x4D: // MOV C,L
+            state->c = state->l;
             break;
-        case 0x4E:
-            UnimplementedInstruction(state);
+        case 0x4E: // MOV C,M
+            state->c = ReadFromHL(state);
             break;
         case 0x4F: // MOV C,A
             state->c = state->a;
             break;
             
-        case 0x50:
-            UnimplementedInstruction(state);
+        case 0x50: // MOV D,B
+            state->d = state->b;
             break;
-        case 0x51:
-            UnimplementedInstruction(state);
+        case 0x51: // MOV D,C
+            state->d = state->c;
             break;
-        case 0x52:
-            UnimplementedInstruction(state);
+        case 0x52: // MOV D,D
+            state->d = state->d;
             break;
-        case 0x53:
-            UnimplementedInstruction(state);
+        case 0x53: // MOV D,E
+            state->d = state->e;
             break;
-        case 0x54:
-            UnimplementedInstruction(state);
+        case 0x54: // MOV D,H
+            state->d = state->h;
             break;
-        case 0x55:
-            UnimplementedInstruction(state);
+        case 0x55: // MOV D,L
+            state->d = state->l;
             break;
         case 0x56: // MOV D,M
         {
@@ -538,27 +544,25 @@ int Emulate8080(State8080 *state)
         case 0x57: // MOV D,A
             state->d = state->a;
             break;
-        case 0x58:
-            UnimplementedInstruction(state);
+        case 0x58: // MOV E,B
+            state->e = state->b;
             break;
-        case 0x59:
-            UnimplementedInstruction(state);
+        case 0x59: // MOV E,C
+            state->e = state->c;
             break;
-        case 0x5A:
-            UnimplementedInstruction(state);
+        case 0x5A: // MOV E,D
+            state->e = state->d;
             break;
-        case 0x5B:
-            UnimplementedInstruction(state);
+        case 0x5B: // MOV E,E;
+            state->e = state->l;
             break;
-        case 0x5C:
-            UnimplementedInstruction(state);
+        case 0x5C: // MOV E,H
+            state->e = state->h;
             break;
-        case 0x5D: // MOV E,M
-        {
-            state->e = ReadFromHL(state);
-        }
+        case 0x5D: // MOV E,L
+            state->e = state->l;
             break;
-        case 0x5E:
+        case 0x5E: // MOV E,M
         {
             state->e = ReadFromHL(state);
         }
@@ -566,23 +570,23 @@ int Emulate8080(State8080 *state)
         case 0x5F: // MOV E,A
             state->e = state->a;
             break;
-        case 0x60:
-            UnimplementedInstruction(state);
+        case 0x60: // MOV H,B
+            state->h = state->b;
             break;
-        case 0x61:
-            UnimplementedInstruction(state);
+        case 0x61: // MOV H,C
+            state->h = state->c;
             break;
-        case 0x62:
-            UnimplementedInstruction(state);
+        case 0x62: // MOV H,D
+            state->h = state->d;
             break;
-        case 0x63:
-            UnimplementedInstruction(state);
+        case 0x63: // MOV H,E
+            state->h = state->e;
             break;
-        case 0x64:
-            UnimplementedInstruction(state);
+        case 0x64: // MOV H,H
+            state->h = state->h;
             break;
-        case 0x65:
-            UnimplementedInstruction(state);
+        case 0x65: // MOV H,L
+            state->h = state->l;
             break;
         case 0x66: // MOV H,M
         {
@@ -592,68 +596,64 @@ int Emulate8080(State8080 *state)
         case 0x67: // MOV H,A
             state->h = state->a;
             break;
-        case 0x68:
-            UnimplementedInstruction(state);
+        case 0x68: // MOV L,B
+            state->l = state->b;
             break;
-        case 0x69:
-            UnimplementedInstruction(state);
+        case 0x69: // MOV L,C
+            state->l = state->c;
             break;
-        case 0x6A:
-            UnimplementedInstruction(state);
+        case 0x6A: // MOV L,D
+            state->l = state->d;
             break;
-        case 0x6B:
-            UnimplementedInstruction(state);
+        case 0x6B: // MOV L,E
+            state->l = state->e;
             break;
-        case 0x6C:
-            UnimplementedInstruction(state);
+        case 0x6C: // MOV L,H
+            state->l = state->h;
             break;
-        case 0x6D:
-            UnimplementedInstruction(state);
+        case 0x6D: // MOV L,L
+            state->l = state->l;
             break;
-        case 0x6E:
-            UnimplementedInstruction(state);
+        case 0x6E: // MOV L,M
+            state->l = ReadFromHL(state);
             break;
         case 0x6F: // MOV L,A
             state->l = state->a;
             break;
             
-        case 0x70:
-            UnimplementedInstruction(state);
+        case 0x70: // MOV M,B
+            WriteToHL(state, state->b);
             break;
-        case 0x71:
-            UnimplementedInstruction(state);
+        case 0x71: // MOV M,C
+            WriteToHL(state, state->c);
             break;
-        case 0x72:
-            UnimplementedInstruction(state);
+        case 0x72: // MOV M,D
+            WriteToHL(state, state->d);
             break;
-        case 0x73:
-            UnimplementedInstruction(state);
+        case 0x73: // MOV M,E
+            WriteToHL(state, state->e);
             break;
-        case 0x74:
-            UnimplementedInstruction(state);
+        case 0x74: // MOV M,H
+            WriteToHL(state, state->h);
             break;
-        case 0x75:
-            UnimplementedInstruction(state);
+        case 0x75: // MOV M,L
+            WriteToHL(state, state->l);
             break;
-        case 0x76:
-            UnimplementedInstruction(state);
+        case 0x76: // HLT
             break;
         case 0x77: // MOV M,A    -   (HL) <- A
-        {
-            uint16_t offset = (state->h << 8) | state->l;
-            state->memory[offset] = state->a;
-        }
+            WriteToHL(state, state->a);
             break;
-        case 0x78:
-            UnimplementedInstruction(state);
+        case 0x78: // MOV A,B
+            state->a = state->b;
             break;
-        case 0x79:
-            UnimplementedInstruction(state);
+        case 0x79: // MOV A,C
+            state->a = state->c;
             break;
         case 0x7A: // MOV A,D
             state->a = state->d;
             break;
-        case 0x7B: // MOV E,A
+        case 0x7B: // MOV A,E
             state->a = state->e;
             break;
         case 0x7C: // MOV A,H
@@ -663,226 +663,437 @@ int Emulate8080(State8080 *state)
             state->a = state->l;
             break;
         case 0x7E: // MOV A,M
-        {
             state->a = ReadFromHL(state);
+            break;
+        case 0x7F: // MOV A,A
+            state->a = state->a;
+            break;
+            
+        case 0x80: // ADD B
+        {
+            uint16_t res = (uint16_t) state->a + (uint16_t) state->b;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
         }
             break;
-        case 0x7F:
-            UnimplementedInstruction(state);
+        case 0x81: // ADD C
+        {
+            uint16_t res = (uint16_t) state->a + (uint16_t) state->c;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x82: // ADD D
+        {
+            uint16_t res = (uint16_t) state->a + (uint16_t) state->d;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x83: // ADD E
+        {
+            uint16_t res = (uint16_t) state->a + (uint16_t) state->e;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x84: // ADD H
+        {
+            uint16_t res = (uint16_t) state->a + (uint16_t) state->h;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x85: // ADD L
+        {
+            uint16_t res = (uint16_t) state->a + (uint16_t) state->l;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x86: // ADD M
+        {
+            uint16_t res = (uint16_t) state->a + (uint16_t) ReadFromHL(state);
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x87: // ADD A
+        {
+            uint16_t res = (uint16_t) state->a + (uint16_t) state->a;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x88: // ADC B
+        {
+            uint16_t res = (uint16_t) state->a  + (uint16_t) state->b + state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x89: // ADC C
+           {
+            uint16_t res = (uint16_t) state->a  + (uint16_t) state->c + state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x8A: // ADC D
+        {
+            uint16_t res = (uint16_t) state->a  + (uint16_t) state->d + state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x8B: // ADC E
+        {
+            uint16_t res = (uint16_t) state->a  + (uint16_t) state->e + state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x8C: // ADC H
+        {
+            uint16_t res = (uint16_t) state->a  + (uint16_t) state->h + state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x8D: // ADC L
+        {
+            uint16_t res = (uint16_t) state->a  + (uint16_t) state->l + state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        };
+            break;
+        case 0x8E: // ADC M
+        {
+            uint16_t res = (uint16_t) state->a  + (uint16_t) ReadFromHL(state) + state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
+            break;
+        case 0x8F: // ADC A
+        {
+            uint16_t res = (uint16_t) state->a  + (uint16_t) state->a + state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
             
-        case 0x80:
-            UnimplementedInstruction(state);
+        case 0x90: // SUB B
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->b;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x81:
-            UnimplementedInstruction(state);
+        case 0x91: // SUB C
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->c;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x82:
-            UnimplementedInstruction(state);
+        case 0x92: // SUB D
+            {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->d;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x83:
-            UnimplementedInstruction(state);
+        case 0x93: // SUB E
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->e;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x84:
-            UnimplementedInstruction(state);
+        case 0x94: // SUB H
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->h;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x85:
-            UnimplementedInstruction(state);
+        case 0x95: // SUB L
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->l;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x86:
-            UnimplementedInstruction(state);
+        case 0x96: // SUB M
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) ReadFromHL(state);
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x87:
-            UnimplementedInstruction(state);
+        case 0x97: // SUB A
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->a;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x88:
-            UnimplementedInstruction(state);
+        case 0x98: // SBB B
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->b - state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x89:
-            UnimplementedInstruction(state);
+        case 0x99: // SBB C
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->c - state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x8A:
-            UnimplementedInstruction(state);
+        case 0x9A: // SBB D
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->d - state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x8B:
-            UnimplementedInstruction(state);
+        case 0x9B: // SBB E
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->e - state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x8C:
-            UnimplementedInstruction(state);
+        case 0x9C: // SBB H
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->h - state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x8D:
-            UnimplementedInstruction(state);
+        case 0x9D: // SBB L
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->l - state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x8E:
-            UnimplementedInstruction(state);
+        case 0x9E: // SBB M
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) ReadFromHL(state) - state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
-        case 0x8F:
-            UnimplementedInstruction(state);
+        case 0x9F: // SBB A
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->a - state->flags.cy;
+            ArithFlagsA(state, res);
+            state->a = (res & 0xff);
+        }
             break;
             
-        case 0x90:
-            UnimplementedInstruction(state);
+        case 0xA0: // ANA B
+        {
+            state->a = (uint16_t) state->a & (uint16_t) state->b;
+            LogicFlagsA(state);
+        }
             break;
-        case 0x91:
-            UnimplementedInstruction(state);
+        case 0xA1: // ANA C
+        {
+            state->a = (uint16_t) state->a & (uint16_t) state->c;
+            LogicFlagsA(state);
+        }
             break;
-        case 0x92:
-            UnimplementedInstruction(state);
+        case 0xA2: // ANA D
+        {
+            state->a = (uint16_t) state->a & (uint16_t) state->d;
+            LogicFlagsA(state);
+        }
             break;
-        case 0x93:
-            UnimplementedInstruction(state);
+        case 0xA3: // ANA E
+        {
+            state->a = (uint16_t) state->a & (uint16_t) state->e;
+            LogicFlagsA(state);
+        }
             break;
-        case 0x94:
-            UnimplementedInstruction(state);
+        case 0xA4: // ANA H
+        {
+            state->a = (uint16_t) state->a & (uint16_t) state->h;
+            LogicFlagsA(state);
+        }
             break;
-        case 0x95:
-            UnimplementedInstruction(state);
+        case 0xA5: // ANA L
+        {
+            state->a = (uint16_t) state->a & (uint16_t) state->l;
+            LogicFlagsA(state);
+        }
             break;
-        case 0x96:
-            UnimplementedInstruction(state);
-            break;
-        case 0x97:
-            UnimplementedInstruction(state);
-            break;
-        case 0x98:
-            UnimplementedInstruction(state);
-            break;
-        case 0x99:
-            UnimplementedInstruction(state);
-            break;
-        case 0x9A:
-            UnimplementedInstruction(state);
-            break;
-        case 0x9B:
-            UnimplementedInstruction(state);
-            break;
-        case 0x9C:
-            UnimplementedInstruction(state);
-            break;
-        case 0x9D:
-            UnimplementedInstruction(state);
-            break;
-        case 0x9E:
-            UnimplementedInstruction(state);
-            break;
-        case 0x9F:
-            UnimplementedInstruction(state);
-            break;
-            
-        case 0xA0:
-            UnimplementedInstruction(state);
-            break;
-        case 0xA1:
-            UnimplementedInstruction(state);
-            break;
-        case 0xA2:
-            UnimplementedInstruction(state);
-            break;
-        case 0xA3:
-            UnimplementedInstruction(state);
-            break;
-        case 0xA4:
-            UnimplementedInstruction(state);
-            break;
-        case 0xA5:
-            UnimplementedInstruction(state);
-            break;
-        case 0xA6:
-            UnimplementedInstruction(state);
+        case 0xA6: // ANA M
+        {
+            state->a = (uint16_t) state->a & (uint16_t) ReadFromHL(state);
+            LogicFlagsA(state);
+        }
             break;
         case 0xA7: // ANA A - A <- A & A (Z, S, P, CY, AC)
         {
-            state->a = state->a & state->a;
-            state->flags.ac = state->flags.cy = 0;
-            state->flags.z = (state->a == 0);
-            state->flags.s = (0x80 == (state->a & 0x80));
-            state->flags.p = parity(state->a, 8);
+            state->a = (uint16_t) state->a & (uint16_t) state->a;
+            LogicFlagsA(state);
         }
             break;
-        case 0xA8:
-            UnimplementedInstruction(state);
+        case 0xA8: // XRA B
+        {
+            state->a = (uint16_t) state->a ^ (uint16_t) state->b;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xA9:
-            UnimplementedInstruction(state);
+        case 0xA9: // XRA C
+        {
+            state->a = (uint16_t) state->a ^ (uint16_t) state->c;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xAA:
-            UnimplementedInstruction(state);
+        case 0xAA: // XRA D
+        {
+            state->a = (uint16_t) state->a ^ (uint16_t) state->d;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xAB:
-            UnimplementedInstruction(state);
+        case 0xAB: // XRA E
+        {
+            state->a = (uint16_t) state->a ^ (uint16_t) state->e;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xAC:
-            UnimplementedInstruction(state);
+        case 0xAC: // XRA H
+        {
+            state->a = (uint16_t) state->a ^ (uint16_t) state->h;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xAD:
-            UnimplementedInstruction(state);
+        case 0xAD: // XRA L
+        {
+            state->a = (uint16_t) state->a ^ (uint16_t) state->l;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xAE:
-            UnimplementedInstruction(state);
+        case 0xAE: // XRA M
+        {
+            state->a = (uint16_t) state->a ^ (uint16_t) ReadFromHL(state);
+            LogicFlagsA(state);
+        }
             break;
         case 0xAF: // XRA A
         {
-            
             state->a = state->a ^ state->a;
             LogicFlagsA(state);
         }
             break;
             
         case 0xB0: // ORA B
+        {
             state->a = state->a | state->b;
             LogicFlagsA(state);
+        }
             break;
-        case 0xB1:
-            UnimplementedInstruction(state);
+        case 0xB1: // ORA C
+        {
+            state->a = state->a | state->c;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xB2:
-            UnimplementedInstruction(state);
+        case 0xB2: // ORA D
+        {
+            state->a = state->a | state->d;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xB3:
-            UnimplementedInstruction(state);
+        case 0xB3: // ORA E
+        {
+            state->a = state->a | state->e;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xB4:
-            UnimplementedInstruction(state);
+        case 0xB4: // ORA H
+        {
+            state->a = state->a | state->h;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xB5:
-            UnimplementedInstruction(state);
+        case 0xB5: // ORA L
+        {
+            state->a = state->a | state->l;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xB6: // ORA M NOT SURE
+        case 0xB6: // ORA M
         {
             state->a = state->a | ReadFromHL(state);            
             LogicFlagsA(state);
         }
             break;
-        case 0xB7:
-            UnimplementedInstruction(state);
+        case 0xB7: // ORA A
+        {
+            state->a = state->a | state->a;
+            LogicFlagsA(state);
+        }
             break;
-        case 0xB8:
-            UnimplementedInstruction(state);
+        case 0xB8: // CMP B
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->b;
+            ArithFlagsA(state, res);
+        }
             break;
-        case 0xB9:
-            UnimplementedInstruction(state);
+        case 0xB9: // CMP C
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->c;
+            ArithFlagsA(state, res);
+        }
             break;
-        case 0xBA:
-            UnimplementedInstruction(state);
+        case 0xBA: // CMP D
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->d;
+            ArithFlagsA(state, res);
+        }
             break;
-        case 0xBB:
-            UnimplementedInstruction(state);
+        case 0xBB: // CMP E
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->e;
+            ArithFlagsA(state, res);
+        }
             break;
-        case 0xBC:
-            UnimplementedInstruction(state);
+        case 0xBC: // CMP H
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->h;
+            ArithFlagsA(state, res);
+        }
             break;
-        case 0xBD:
-            UnimplementedInstruction(state);
+        case 0xBD: // CMP L
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->l;
+            ArithFlagsA(state, res);
+        }
             break;
-        case 0xBE:
-            UnimplementedInstruction(state);
+        case 0xBE: // CMP M
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) ReadFromHL(state);
+            ArithFlagsA(state, res);
+        }
             break;
-        case 0xBF:
-            UnimplementedInstruction(state);
+        case 0xBF: // CMP A
+        {
+            uint16_t res = (uint16_t) state->a - (uint16_t) state->a;
+            ArithFlagsA(state, res);
+        }
             break;
             
-        case 0xC0:
-            UnimplementedInstruction(state);
+        case 0xC0: // RNZ
+            if(state->flags.z == 0) {
+                state->pc = state->memory[state->sp] | (state->memory[state->sp + 1] << 8);
+                state->sp += 2;
+            }
             break;
         case 0xC1: // POP B - C <- (sp); B <- (sp+1); sp <- sp+2
             state->c = state->memory[state->sp];
@@ -902,8 +1113,15 @@ int Emulate8080(State8080 *state)
         case 0xC3: // JMP
             state->pc = (opcode[2] << 8) | opcode[1];
             break;
-        case 0xC4:
-            UnimplementedInstruction(state);
+        case 0xC4: // CNZ
+            if (state->flags.z == 0)
+            {
+                uint16_t ret = state->pc + 2; // gets the address of the stack
+                WriteMem(state, state->sp - 1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp - 2, (ret >> 8) & 0xff);
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1];
+            }
             break;
         case 0xC5: // PUSH B
         {
@@ -912,19 +1130,23 @@ int Emulate8080(State8080 *state)
             state->sp = state->sp - 2;
         }
             break;
-        case 0xC6:
+        case 0xC6: // ADI byte
         {
             uint16_t x = (uint16_t)state->a + (uint16_t)opcode[1];
-            state->flags.z = ((x & 0xff) == 0);
-            state->flags.s = (0x80 == (x & 0x80));
-            state->flags.p = parity((x & 0xff), 8);
+            FlagsZSP(state, x & 0xff);
             state->flags.cy = (x > 0xff);
-            state->a = (uint8_t)x;
+            state->a = x & 0xff;
             state->pc++;
         }
             break;
-        case 0xC7:
-            UnimplementedInstruction(state);
+        case 0xC7: // RST 0
+        {
+            uint16_t ret = state->pc + 2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+            state->sp = state->sp - 2;
+            state->pc = 0x0000;
+        }
             break;
         case 0xC8: // RZ
             if (state->flags.z == 1)
@@ -951,19 +1173,26 @@ int Emulate8080(State8080 *state)
         case 0xCB: // JMP shouldnt have to implement
             UnimplementedInstruction(state);
             break;
-        case 0xCC:
-            UnimplementedInstruction(state);
+        case 0xCC: // CZ
+            if(state->flags.z == 1)
+            {
+                uint16_t ret = state->pc + 2; // gets the address of the stack
+                WriteMem(state, state->sp - 1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp - 2, (ret >> 8) & 0xff);
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1]; // changes pc to be whats specified by the following bytes 
+            }
             break;
         case 0xCD: // CALL
         {
             uint16_t ret = state->pc + 2; // gets the address of the stack
-            state->memory[state->sp - 1] = (ret >> 8) & 0xff;
-            state->memory[state->sp - 2] = (ret & 0xff);
+            WriteMem(state, state->sp - 1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp - 2, (ret >> 8) & 0xff);
             state->sp = state->sp - 2;
             state->pc = (opcode[2] << 8) | opcode[1]; // changes pc to be whats specified by the following bytes.
         }
             break;
-        case 0xCE:
+        case 0xCE: // ACI
             UnimplementedInstruction(state);
             break;
         case 0xCF:
@@ -1028,12 +1257,15 @@ int Emulate8080(State8080 *state)
                 state->pc += 2;
             }
             break;
-            // case 0xDB: // IN
-            //   // MachineIn(state, opcode[1]);
-            //   state->pc++;
-            //   break;
-        case 0xDC:
-            UnimplementedInstruction(state);
+        case 0xDC: // CC
+            if(state->flags.cy == 1)
+            {
+                uint16_t ret = state->pc + 2;
+                WriteMem(state, state->sp - 1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp - 2, (ret >> 8) & 0xff);
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1];
+            }
             break;
         case 0xDD: // CALL shouldnt have to implement
             UnimplementedInstruction(state);
