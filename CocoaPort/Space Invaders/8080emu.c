@@ -82,6 +82,14 @@ static uint8_t ReadFromHL(State8080 *state)
     return state->memory[offset];
 }
 
+static void LogicFlagsA(State8080 *state)
+{
+    state->flags.cy = state->flags.ac = 0;
+    state->flags.z = (state->a == 0);
+    state->flags.s = (0x80 == (state->a & 0x80));
+    state->flags.p = parity(state->a, 8);
+}
+
 int Emulate8080(State8080 *state)
 {
     // * turns a pointer into a value
@@ -99,7 +107,7 @@ int Emulate8080(State8080 *state)
         case 0x08:
         case 0x10:
         case 0x18:
-            // case 0x20:
+        case 0x20:
         case 0x28:
         case 0x30:
         case 0x38:
@@ -123,8 +131,8 @@ int Emulate8080(State8080 *state)
                 state->b++;
             }
             break;
-        case 0x04:
-            UnimplementedInstruction(state);
+        case 0x04: // INR B
+            state->b++;
             break;
         case 0x05: // DCR B
         {
@@ -139,8 +147,12 @@ int Emulate8080(State8080 *state)
             state->b = opcode[1];
             state->pc++;
             break;
-        case 0x07:
-            UnimplementedInstruction(state);
+        case 0x07: // RLC
+        {
+            uint8_t x = state->a;
+            state->a = ((x & 0x80) >> 7) | (x << 1);
+            state->flags.cy = (0x80 == (x & 0x80));
+        }
             break;
         case 0x09: // DAD B - HL = HL + BC
         {
@@ -247,10 +259,7 @@ int Emulate8080(State8080 *state)
         case 0x1F:
             UnimplementedInstruction(state);
             break;
-            
-        case 0x20:
-            UnimplementedInstruction(state);
-            break;
+
         case 0x21: // LXI H
             state->l = opcode[1];
             state->h = opcode[2];
@@ -751,15 +760,13 @@ int Emulate8080(State8080 *state)
         {
             
             state->a = state->a ^ state->a;
-            state->flags.cy = state->flags.ac = 0;
-            state->flags.z = (state->a == 0);
-            state->flags.s = (0x80 == (state->a & 0x80));
-            state->flags.p = parity(state->a, 8);
+            LogicFlagsA(state);
         }
             break;
             
-        case 0xB0:
-            UnimplementedInstruction(state);
+        case 0xB0: // ORA B
+            state->a = state->a | state->b;
+            LogicFlagsA(state);
             break;
         case 0xB1:
             UnimplementedInstruction(state);
@@ -782,10 +789,7 @@ int Emulate8080(State8080 *state)
             uint8_t ret = state->memory[offset];
             state->a = state->a | ret;
             
-            state->flags.cy = state->flags.ac = 0;
-            state->flags.z = (state->a == 0);
-            state->flags.s = (0x80 == (state->a & 0x80));
-            state->flags.p = parity(state->a, 8);
+            LogicFlagsA(state);
         }
             break;
         case 0xB7:
@@ -883,7 +887,7 @@ int Emulate8080(State8080 *state)
                 state->pc += 2;
             }
             break;
-        case 0xCB:
+        case 0xCB: // JMP shouldnt have to implement
             UnimplementedInstruction(state);
             break;
         case 0xCC:
@@ -950,7 +954,7 @@ int Emulate8080(State8080 *state)
                 state->sp += 2;
             }
             break;
-        case 0xD9:
+        case 0xD9: // RET shouldnt have to implement
             UnimplementedInstruction(state);
             break;
         case 0xDA: // JC - if cy, PC<-adr
@@ -970,7 +974,7 @@ int Emulate8080(State8080 *state)
         case 0xDC:
             UnimplementedInstruction(state);
             break;
-        case 0xDD:
+        case 0xDD: // CALL shouldnt have to implement
             UnimplementedInstruction(state);
             break;
         case 0xDE:
@@ -1007,10 +1011,7 @@ int Emulate8080(State8080 *state)
         case 0xE6: // ANI A <- A & data
         {
             state->a = (state->a & opcode[1]);
-            state->flags.cy = state->flags.ac = 0;
-            state->flags.z = (state->a == 0);
-            state->flags.s = (0x80 == (state->a & 0x80));
-            state->flags.p = parity(state->a, 8);
+            LogicFlagsA(state);
             state->pc++;
         }
             
