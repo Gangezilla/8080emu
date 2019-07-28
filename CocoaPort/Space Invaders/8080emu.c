@@ -4,7 +4,7 @@
 #include "8080emu.h"
 #include "8080Disassembler.h"
 
-#define PRINTOPS 1
+#define PRINTOPS 0
 
 unsigned char cycles8080[] = {
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
@@ -122,7 +122,7 @@ static void Call(State8080 *state)
 {
     uint16_t ret = state->pc + 2; // gets the address of the stack
     WriteMem(state, state->sp - 1, (ret >> 8) & 0xff);
-    WriteMem(state, state->sp - 2, (ret >> 8) & 0xff);
+    WriteMem(state, state->sp - 2, (ret & 0xff));
     state->sp = state->sp - 2;
 }
 
@@ -135,15 +135,22 @@ static void Rst(State8080 *state, uint8_t newPC)
     state->pc = newPC;
 }
 
+static void Pop(State8080* state, uint8_t *high, uint8_t *low)
+{
+    *low = state->memory[state->sp];
+    *high = state->memory[state->sp+1];
+    state->sp += 2;
+}
+
 int Emulate8080(State8080 *state)
 {
     // * turns a pointer into a value
     // & turns a value into a pointer
     // -> is used to access members of a struct when theyre a pointer.
     unsigned char *opcode = &state->memory[state->pc];
-#if PRINTOPS // the # indicates a compile option, or a "preprocessor directive"
-    Disassemble8080(state->memory, state->pc);
-#endif
+    #if PRINTOPS // the # indicates a compile option, or a "preprocessor directive"
+        Disassemble8080(state->memory, state->pc);
+    #endif
     state->pc += 1;
     
     switch (*opcode)
@@ -1329,9 +1336,7 @@ int Emulate8080(State8080 *state)
             break;
         case 0xE1: // POP H - L <- (sp); H <- (sp+1); sp <- sp+2
         {
-            state->l = state->memory[state->sp];
-            state->h = state->memory[state->sp + 1];
-            state->sp += 2;
+            Pop(state, &state->h, &state->l);
         }
             break;
         case 0xE2: // JPO
@@ -1510,7 +1515,7 @@ int Emulate8080(State8080 *state)
             state->int_enable = 1;
             break;
         case 0xFC: // CM - if (M) call adr
-            if(state->flags.s == 1)
+            if(state->flags.s != 0)
             {
                 Call(state);
                 state->pc = (opcode[2] << 8) | opcode[1];
@@ -1535,13 +1540,13 @@ int Emulate8080(State8080 *state)
             Rst(state, 0x38);
             break;
     }
-#if PRINTOPS
-    // printf("\tC=%d,P=%d,S=%d,Z=%d,AC=%d\n", state->flags.cy, state->flags.p,
-    //        state->flags.s, state->flags.z, state->flags.ac);
-    // printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x PC %04x\n",
-    //        state->a, state->b, state->c, state->d,
-    //        state->e, state->h, state->l, state->sp, state->pc);
-#endif
+    #if PRINTOPS
+        printf("\tC=%d,P=%d,S=%d,Z=%d,AC=%d\n", state->flags.cy, state->flags.p,
+            state->flags.s, state->flags.z, state->flags.ac);
+        printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x PC %04x\n",
+            state->a, state->b, state->c, state->d,
+            state->e, state->h, state->l, state->sp, state->pc);
+    #endif
     return cycles8080[*opcode];
 }
 
