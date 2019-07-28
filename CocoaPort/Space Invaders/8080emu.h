@@ -28,7 +28,7 @@ typedef struct State8080
     uint16_t pc;
     uint8_t *memory;
     struct Flags flags;
-    uint8_t int_enable;
+    uint8_t int_enable; // interrupt enable
 } State8080;
 
 int Emulate8080(State8080 *state);

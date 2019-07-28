@@ -234,6 +234,12 @@ Examples of this look like:
 
 ### What's going on in opcode 0x27, DAA?
 
+### Why do we sometimes & a value with another value, such as 0xff? As seen in 0xDE, SBI
+
+### Why are there so many RST commands, and how is the PC value determined for each of these.
+
+I think the values are just going up per byte, but double check this.
+
 ## Helpful Resources
 
 - <http://www.nj7p.info/Manuals/PDFs/Intel/9800153B.pdf> - Intel 8080 manual. Really interesting and has a lot of really valuable references. Some of the instruction descriptions are a bit hard to understand though.
