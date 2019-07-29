@@ -28,6 +28,34 @@ unsigned char cycles8080[] = {
     11, 10, 10, 4, 17, 11, 7, 11, 11, 5, 10, 4, 17, 17, 7, 11,
 };
 
+// #if PRINTOPS
+int last1000index = 0;
+uint16_t last1000[1000];
+uint16_t last1000sp[1000];
+uint16_t lastSP;
+// #endif
+
+void PrintLast1000(void)
+{
+    int i;
+    for(i = 0; i < 100; i++)
+    {
+        int j;
+        printf("%04d\n", i * 10);
+        for(j = 0; j < 10; j++)
+        {
+            int n = 1 * 10 + j;
+            printf("PC: %04x SP: %04x", last1000[n], last1000sp[n]);
+            printf("\n");
+            if (n == last1000index)
+            {
+                printf("**");
+            }
+        }
+        printf("\n");
+    }
+}
+
 int parity(int x, int size)
 {
     int i;
@@ -148,6 +176,18 @@ int Emulate8080(State8080 *state)
     // & turns a value into a pointer
     // -> is used to access members of a struct when theyre a pointer.
     unsigned char *opcode = &state->memory[state->pc];
+
+    // #if PRINTOPS
+    last1000[last1000index] = state->pc;
+    last1000sp[last1000index] = state->sp;
+    last1000index++;
+    if(last1000index > 1000)
+    {
+        last1000index = 0;
+    }
+    // #endif
+
+    
     #if PRINTOPS // the # indicates a compile option, or a "preprocessor directive"
         Disassemble8080(state->memory, state->pc);
     #endif
@@ -383,6 +423,7 @@ int Emulate8080(State8080 *state)
             }
             break;
         case 0x28: 
+            PrintLast1000();
             UnimplementedInstruction(state);
             break;
         case 0x29: // DAD H
