@@ -5,7 +5,7 @@
 #include "8080Disassembler.h"
 
 #define PRINTOPS 0
-#define DIAGNOSTICS 1
+#define DIAGNOSTICS 0
 
 unsigned char cycles8080[] = {
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
@@ -112,7 +112,7 @@ static void WriteMem(State8080* state, uint16_t address, uint8_t value)
     if (address >= 0x4000)
     {
         printf("Writing out of Space Invaders RAM not allowed %x\n", address);
-        PrintLast1000();
+        // PrintLast1000();
         return;
     }
     
@@ -479,8 +479,8 @@ int Emulate8080(State8080 *state)
                 ArithFlagsA(state, res);
             }
             break;
-        case 0x28: 
-            PrintLast1000();
+        case 0x28:
+            // PrintLast1000();
             UnimplementedInstruction(state);
             break;
         case 0x29: // DAD H
@@ -1281,8 +1281,7 @@ int Emulate8080(State8080 *state)
             Ret(state);
             break;
         case 0xCA: // JZ
-            if (state->flags.z == 1)
-                // we check if the zero flag is set, hence if it's 1.
+            if (state->flags.z)
             {
                 state->pc = (opcode[2] << 8) | opcode[1];
             }
@@ -1323,8 +1322,9 @@ int Emulate8080(State8080 *state)
                         }
                     }
                 else if (0 == (opcode[2] << 8) | opcode[1])
-                {
-                    printf("exiting");
+                {   
+                    // PrintLast1000();
+                    printf("exiting in CALL 0xCD\n");
                     exit(0);
                 }
                 else
@@ -1354,9 +1354,7 @@ int Emulate8080(State8080 *state)
             }
             break;
         case 0xD1:
-            state->e = state->memory[state->sp];
-            state->d = state->memory[state->sp + 1];
-            state->sp += 2;
+            Pop(state, &state->d, &state->e);
             break;
         case 0xD2: // JNC
             if (state->flags.cy == 0)
@@ -1497,7 +1495,7 @@ int Emulate8080(State8080 *state)
             break;
         case 0xE6: // ANI A <- A & data
         {
-            state->a = (state->a & opcode[1]);
+            state->a = state->a & opcode[1];
             LogicFlagsA(state);
             state->pc++;
         }
@@ -1518,6 +1516,9 @@ int Emulate8080(State8080 *state)
             {
                 state->pc = (opcode[2] << 8) | opcode[1];
             }
+            else {
+                state->pc += 2;
+            }
             break;
         case 0xEB: // XCHG -     H <-> D; L <-> E
         {
@@ -1534,6 +1535,10 @@ int Emulate8080(State8080 *state)
             {
                 Call(state);
                 state->pc = (opcode[2] << 8) | opcode[1];
+            }
+            else
+            {
+                state->pc += 2;
             }
             break;
         case 0xED: // CALL // shouldnt have to implement
