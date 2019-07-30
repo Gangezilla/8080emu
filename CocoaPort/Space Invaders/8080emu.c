@@ -111,6 +111,7 @@ static void WriteMem(State8080* state, uint16_t address, uint8_t value)
     if (address >= 0x4000)
     {
         printf("Writing out of Space Invaders RAM not allowed %x\n", address);
+        PrintLast1000();
         return;
     }
     
@@ -242,8 +243,9 @@ int Emulate8080(State8080 *state)
         state->memory[0x59e] = 0x05;    
     #endif
 
+    // printf("Opcode: %d\n", *opcode);
     state->pc += 1;
-    
+
     switch (*opcode)
     {
         case 0x00: // NOP
