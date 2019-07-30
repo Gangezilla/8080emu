@@ -39,6 +39,7 @@
   state = calloc(sizeof(State8080), 1);
   state->memory = malloc(16 * 0x1000);
 
+  // [self ReadFile:@"cpudiag.bin" IntoMemoryAt:0x100];
   [self ReadFile:@"invaders.h" IntoMemoryAt:0];
   [self ReadFile:@"invaders.g" IntoMemoryAt:0x800];
   [self ReadFile:@"invaders.f" IntoMemoryAt:0x1000];

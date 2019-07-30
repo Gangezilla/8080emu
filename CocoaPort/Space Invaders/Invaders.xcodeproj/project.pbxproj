@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0495FA5122EFE06B00279245 /* cpudiag.bin in Resources */ = {isa = PBXBuildFile; fileRef = 0495FA5022EFE06A00279245 /* cpudiag.bin */; };
 		04B0661F22E5C45700EADDDF /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 04B0661E22E5C45700EADDDF /* AppDelegate.m */; };
 		04B0662122E5C45700EADDDF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04B0662022E5C45700EADDDF /* Assets.xcassets */; };
 		04B0662422E5C45700EADDDF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04B0662222E5C45700EADDDF /* MainMenu.xib */; };
@@ -22,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0495FA5022EFE06A00279245 /* cpudiag.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = cpudiag.bin; path = ../../../../cpudiag.bin; sourceTree = "<group>"; };
 		04B0661A22E5C45700EADDDF /* Invaders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Invaders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		04B0661D22E5C45700EADDDF /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		04B0661E22E5C45700EADDDF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 			children = (
 				04B0663922E5CC0E00EADDDF /* invaders.e */,
 				04B0663622E5CC0E00EADDDF /* invaders.f */,
+				0495FA5022EFE06A00279245 /* cpudiag.bin */,
 				04B0663722E5CC0E00EADDDF /* invaders.g */,
 				04B0663822E5CC0E00EADDDF /* invaders.h */,
 			);
@@ -160,6 +163,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				04B0663C22E5CC0E00EADDDF /* invaders.e in Resources */,
+				0495FA5122EFE06B00279245 /* cpudiag.bin in Resources */,
 				04B0663D22E5CC8000EADDDF /* invaders.f in Resources */,
 				04B0663B22E5CC0E00EADDDF /* invaders.g in Resources */,
 				04B0663E22E5CC8400EADDDF /* invaders.h in Resources */,

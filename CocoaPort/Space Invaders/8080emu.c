@@ -30,8 +30,22 @@ unsigned char cycles8080[] = {
 
 // #if PRINTOPS
 int last1000index = 0;
-uint16_t last1000[1000];
+uint16_t last1000pc[1000];
+
 uint16_t last1000sp[1000];
+uint16_t last1000cy[1000];
+uint16_t last1000p[1000];
+uint16_t last1000s[1000];
+uint16_t last1000z[1000];
+uint16_t last1000ac[1000];
+
+uint16_t last1000a[1000];
+uint16_t last1000b[1000];
+uint16_t last1000c[1000];
+uint16_t last1000d[1000];
+uint16_t last1000e[1000];
+uint16_t last1000h[1000];
+uint16_t last1000l[1000];
 uint16_t lastSP;
 // #endif
 
@@ -45,12 +59,17 @@ void PrintLast1000(void)
         for(j = 0; j < 10; j++)
         {
             int n = 1 * 10 + j;
-            printf("PC: %04x SP: %04x", last1000[n], last1000sp[n]);
-            printf("\n");
-            if (n == last1000index)
-            {
-                printf("**");
-            }
+            printf("PC: %04x", last1000pc[n]);
+            printf("\tC=%d,P=%d,S=%d,Z=%d,AC=%d\n", last1000cy[n], last1000p[n],
+            last1000s[n], last1000z[n], last1000ac[n]);
+            printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x\n",
+            last1000a[n], last1000b[n], last1000c[n], last1000d[n],
+            last1000e[n], last1000h[n], last1000l[n], last1000sp[n]);
+            // printf("\n");
+            // if (n == last1000index)
+            // {
+            //     printf("**");
+            // }
         }
         printf("\n");
     }
@@ -178,8 +197,22 @@ int Emulate8080(State8080 *state)
     unsigned char *opcode = &state->memory[state->pc];
 
     // #if PRINTOPS
-    last1000[last1000index] = state->pc;
+    last1000pc[last1000index] = state->pc;
     last1000sp[last1000index] = state->sp;
+    last1000cy[last1000index] = state->flags.cy;
+    last1000p[last1000index] = state->flags.p;
+    last1000s[last1000index] = state->flags.s;
+    last1000z[last1000index] = state->flags.z;
+    last1000ac[last1000index] = state->flags.ac;
+
+    last1000a[last1000index] = state->a;
+    last1000b[last1000index] = state->b;
+    last1000c[last1000index] = state->c;
+    last1000d[last1000index] = state->d;
+    last1000e[last1000index] = state->e;
+    last1000h[last1000index] = state->h;
+    last1000l[last1000index] = state->l;
+
     last1000index++;
     if(last1000index > 1000)
     {
@@ -191,6 +224,24 @@ int Emulate8080(State8080 *state)
     #if PRINTOPS // the # indicates a compile option, or a "preprocessor directive"
         Disassemble8080(state->memory, state->pc);
     #endif
+
+    #if DIAGNOSTICS
+        //Fix the first instruction to be JMP 0x100
+        state->memory[0]=0xc3;
+        state->memory[1]=0;
+        state->memory[2]=0x01;
+
+        //Fix the stack pointer from 0x6ad to 0x7ad
+        // this 0x06 byte 112 in the code, which is
+        // byte 112 + 0x100 = 368 in memory    
+        state->memory[368] = 0x7;    
+
+        //Skip DAA test
+        state->memory[0x59c] = 0xc3; //JMP    
+        state->memory[0x59d] = 0xc2;    
+        state->memory[0x59e] = 0x05;    
+    #endif
+
     state->pc += 1;
     
     switch (*opcode)
@@ -1249,6 +1300,29 @@ int Emulate8080(State8080 *state)
             break;
         case 0xCD: // CALL
         {
+            #if DIAGNOSTICS
+                if (5 == ((opcode[2] << 8) | opcode[1]))
+                    {
+                        if (state->c == 9)
+                        {
+                            uint16_t offset = (state->d << 8) | (state->e);
+                            char *str = &state->memory[offset + 3];
+                            while (*str != '$')
+                                printf("%c", *str++);
+                            printf("\n");
+                        }
+                        else if (state->c == 2)
+                        {
+                            printf("print char routine called\n");
+                        }
+                    }
+                else if (0 == (opcode[2] << 8) | opcode[1])
+                {
+                    printf("exiting");
+                    exit(0);
+                }
+                else
+            #endif
             Call(state);
             state->pc = (opcode[2] << 8) | opcode[1];
         }
