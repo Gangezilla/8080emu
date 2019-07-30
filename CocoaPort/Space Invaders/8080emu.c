@@ -105,7 +105,7 @@ static void WriteMem(State8080* state, uint16_t address, uint8_t value)
     if (address < 0x2000)
     {
         printf("Writing ROM not allowed %x\n", address);
-        exit(1);
+        // exit(1);
         return;
     }
     
@@ -159,29 +159,6 @@ static void ArithFlagsA(State8080 *state, uint16_t res)
     state->flags.z = ((res & 0xff) == 0);
     state->flags.s = (0x80 == (res & 0x80));
     state->flags.p = parity(res & 0xff, 8);
-}
-
-static void Ret(State8080 *state)
-{
-    state->pc = state->memory[state->sp] | (state->memory[state->sp + 1] << 8);
-    state->sp += 2;
-}
-
-static void Call(State8080 *state)
-{
-    uint16_t ret = state->pc + 2; // gets the address of the stack
-    WriteMem(state, state->sp - 1, (ret >> 8) & 0xff);
-    WriteMem(state, state->sp - 2, (ret & 0xff));
-    state->sp = state->sp - 2;
-}
-
-static void Rst(State8080 *state, uint8_t newPC)
-{
-    uint16_t ret = state->pc + 2;
-    WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
-    WriteMem(state, state->sp-2, (ret & 0xff));
-    state->sp = state->sp - 2;
-    state->pc = newPC;
 }
 
 static void Pop(State8080* state, uint8_t *high, uint8_t *low)
@@ -245,6 +222,10 @@ int Emulate8080(State8080 *state)
     #endif
 
     // printf("Opcode: %d\n", *opcode);
+    if(state->pc == 0x0AEA)
+    {
+        printf("0x0AEA");
+    }
     state->pc += 1;
 
     #if DIAGNOSTICS
@@ -428,7 +409,8 @@ int Emulate8080(State8080 *state)
                 state->flags.cy = (1 == (x & 1));
             }
             break;
-        case 0x20: 
+        case 0x20:
+            PrintLast1000();
             UnimplementedInstruction(state);
             break;
         case 0x21: // LXI H
@@ -480,7 +462,7 @@ int Emulate8080(State8080 *state)
             }
             break;
         case 0x28:
-            // PrintLast1000();
+            PrintLast1000();
             UnimplementedInstruction(state);
             break;
         case 0x29: // DAD H
@@ -583,8 +565,8 @@ int Emulate8080(State8080 *state)
             uint16_t offset = (opcode[2] << 8 | opcode[1]);
             state->a = state->memory[offset];
             state->pc += 2;
-            break;
         }
+            break;
         case 0x3B: // DCX SP
             state->sp--;
             break;
@@ -1072,7 +1054,7 @@ int Emulate8080(State8080 *state)
             break;
         case 0xA7: // ANA A - A <- A & A (Z, S, P, CY, AC)
         {
-            state->a = (uint16_t) state->a & (uint16_t) state->a;
+            state->a = state->a & state->a;
             LogicFlagsA(state);
         }
             break;
@@ -1224,7 +1206,8 @@ int Emulate8080(State8080 *state)
             
         case 0xC0: // RNZ
             if(state->flags.z == 0) {
-                Ret(state);
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+				state->sp += 2;
             }
             break;
         case 0xC1: // POP B - C <- (sp); B <- (sp+1); sp <- sp+2
@@ -1246,8 +1229,11 @@ int Emulate8080(State8080 *state)
         case 0xC4: // CNZ
             if (state->flags.z == 0)
             {
-               Call(state);
-               state->pc = (opcode[2] << 8) | opcode[1];
+                uint16_t	ret = state->pc+2;
+                WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp-2, (ret & 0xff));
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1];
             } else {
                 state->pc += 2;
             }
@@ -1268,17 +1254,23 @@ int Emulate8080(State8080 *state)
             break;
         case 0xC7: // RST 0
         {
-            Rst(state, 0x00);
+            uint16_t	ret = state->pc+2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = 0x0000;
         }
             break;
         case 0xC8: // RZ
             if (state->flags.z == 1)
             {
-                Ret(state);
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1] << 8);
+				state->sp += 2;
             }
             break;
         case 0xC9: // RET
-            Ret(state);
+            state->pc = state->memory[state->sp] | (state->memory[state->sp+1] << 8);
+			state->sp += 2;
             break;
         case 0xCA: // JZ
             if (state->flags.z)
@@ -1296,7 +1288,10 @@ int Emulate8080(State8080 *state)
         case 0xCC: // CZ
             if(state->flags.z == 1)
             {
-                Call(state);
+                uint16_t	ret = state->pc+2;
+                WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp-2, (ret & 0xff));
+                state->sp = state->sp - 2;
                 state->pc = (opcode[2] << 8) | opcode[1];
             }
             else {
@@ -1305,32 +1300,35 @@ int Emulate8080(State8080 *state)
             break;
         case 0xCD: // CALL
         {
-            #if DIAGNOSTICS
-                if (5 == ((opcode[2] << 8) | opcode[1]))
-                    {
-                        if (state->c == 9)
-                        {
-                            uint16_t offset = (state->d << 8) | (state->e);
-                            char *str = &state->memory[offset + 3];
-                            while (*str != '$')
-                                printf("%c", *str++);
-                            printf("\n");
-                        }
-                        else if (state->c == 2)
-                        {
-                            printf("print char routine called\n");
-                        }
-                    }
-                else if (0 == (opcode[2] << 8) | opcode[1])
-                {   
-                    // PrintLast1000();
-                    printf("exiting in CALL 0xCD\n");
-                    exit(0);
-                }
-                else
-            #endif
-            Call(state);
-            state->pc = (opcode[2] << 8) | opcode[1];
+            // #if DIAGNOSTICS
+            //     if (5 == ((opcode[2] << 8) | opcode[1]))
+            //         {
+            //             if (state->c == 9)
+            //             {
+            //                 uint16_t offset = (state->d << 8) | (state->e);
+            //                 char *str = &state->memory[offset + 3];
+            //                 while (*str != '$')
+            //                     printf("%c", *str++);
+            //                 printf("\n");
+            //             }
+            //             else if (state->c == 2)
+            //             {
+            //                 printf("print char routine called\n");
+            //             }
+            //         }
+            //     else if (0 == (opcode[2] << 8) | opcode[1])
+            //     {   
+            //         // PrintLast1000();
+            //         printf("exiting in CALL 0xCD\n");
+            //         exit(0);
+            //     }
+            //     else
+            // #endif
+            uint16_t	ret = state->pc+2;
+			WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+			WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = (opcode[2] << 8) | opcode[1];
         }
             break;
         case 0xCE: // ACI
@@ -1344,13 +1342,18 @@ int Emulate8080(State8080 *state)
             break;
         case 0xCF: // RST 1
         {
-            Rst(state, 0x08);
+            uint16_t	ret = state->pc+2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = 0x0008;
         }
             break;
             
         case 0xD0: // RNC
             if(state->flags.cy == 0) {
-               Ret(state);
+               state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+				state->sp += 2;
             }
             break;
         case 0xD1:
@@ -1366,15 +1369,18 @@ int Emulate8080(State8080 *state)
                 state->pc += 2;
             }
             break;
-        case 0xD3:
+        case 0xD3: // OUT
             state->pc++;
             break;
         case 0xD4: // CNC
         {
             if(state->flags.cy == 0)
             {
-                Call(state);
-                state->pc = (opcode[2] << 8) | opcode[1];
+                uint16_t	ret = state->pc+2;
+				WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+				WriteMem(state, state->sp-2, (ret & 0xff));
+				state->sp = state->sp - 2;
+				state->pc = (opcode[2] << 8) | opcode[1];
             }
             else
             {
@@ -1396,13 +1402,18 @@ int Emulate8080(State8080 *state)
             break;
         case 0xD7: // RST 2
         {
-            Rst(state, 0x10);
+            uint16_t	ret = state->pc+2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = 0x10;
         }
             break;
         case 0xD8: // RC
             if (state->flags.cy != 0)
             {
-                Ret(state);
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+                state->sp += 2;
             }
             break;
         case 0xD9: // RET shouldnt have to implement
@@ -1424,8 +1435,11 @@ int Emulate8080(State8080 *state)
         case 0xDC: // CC
             if(state->flags.cy != 0)
             {
-                Call(state);
-                state->pc = (opcode[2] << 8) | opcode[1];
+                uint16_t ret = state->pc+2;
+				WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+				WriteMem(state, state->sp-2, (ret & 0xff));
+				state->sp = state->sp - 2;
+				state->pc = (opcode[2] << 8) | opcode[1];
             }
             else {
                 state->pc += 2;
@@ -1445,14 +1459,19 @@ int Emulate8080(State8080 *state)
             break;
         case 0xDF: // RST 3
         {
-            Rst(state, 0x18);
+            uint16_t	ret = state->pc+2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = 0x18;
         }
             break;
             
         case 0xE0: // RPO
             if(state->flags.p == 0)
             {
-                Ret(state);
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+				state->sp += 2;
             }
             break;
         case 0xE1: // POP H - L <- (sp); H <- (sp+1); sp <- sp+2
@@ -1482,8 +1501,11 @@ int Emulate8080(State8080 *state)
         case 0xE4: // CPO
             if(state->flags.p == 0)
             {
-                Call(state);
-                state->pc = (opcode[2] << 8) | opcode[1]; 
+                uint16_t ret = state->pc+2;
+				WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+				WriteMem(state, state->sp-2, (ret & 0xff));
+				state->sp = state->sp - 2;
+				state->pc = (opcode[2] << 8) | opcode[1];
             }
             else 
             {
@@ -1501,11 +1523,18 @@ int Emulate8080(State8080 *state)
         }
             break;
         case 0xE7: // RST 4
-            Rst(state, 0x20);
+        {
+            uint16_t	ret = state->pc+2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = 0x20;
+        }
             break;
         case 0xE8: // RPE
             if(state->flags.p != 0) {
-                Ret(state);
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+				state->sp += 2;
             }
             break;
         case 0xE9: // PCHL
@@ -1533,8 +1562,11 @@ int Emulate8080(State8080 *state)
         case 0xEC: // CPE
             if(state->flags.p != 0)
             {
-                Call(state);
-                state->pc = (opcode[2] << 8) | opcode[1];
+                uint16_t ret = state->pc+2;
+                WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp-2, (ret & 0xff));
+				state->sp = state->sp - 2;
+				state->pc = (opcode[2] << 8) | opcode[1];
             }
             else
             {
@@ -1554,13 +1586,20 @@ int Emulate8080(State8080 *state)
             }
             break;
         case 0xEF: // RST 5
-            Rst(state, 0x28);
+        {
+            uint16_t	ret = state->pc+2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = 0x28;
+        }
             break;
             
         case 0xF0: // RP
             if(state->flags.s == 0)
             {
-                Ret(state);
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+				state->sp += 2;
             }
             break;
         case 0xF1: // POP PSW - flags <- (sp); A <- (sp+1); sp <- sp+2
@@ -1582,8 +1621,11 @@ int Emulate8080(State8080 *state)
             {
                 if(state->flags.s == 0)
                 {
-                    Call(state);
-                    state->pc = (opcode[2] << 8) | opcode[1];
+                uint16_t ret = state->pc+2;
+                WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp-2, (ret & 0xff));
+				state->sp = state->sp - 2;
+				state->pc = (opcode[2] << 8) | opcode[1];
                 }
                 else
                 {
@@ -1606,11 +1648,18 @@ int Emulate8080(State8080 *state)
         }
             break;
         case 0xF7: // RST 6
-            Rst(state, 0x30);
+        {
+            uint16_t	ret = state->pc+2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = 0x30;
+        }
             break;
         case 0xF8: // RM
             if(state->flags.s != 0) {
-                Ret(state);
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+				state->sp += 2;
             }
             break;
         case 0xF9: // SPHL
@@ -1632,8 +1681,11 @@ int Emulate8080(State8080 *state)
         case 0xFC: // CM - if (M) call adr
             if(state->flags.s != 0)
             {
-                Call(state);
-                state->pc = (opcode[2] << 8) | opcode[1];
+                uint16_t	ret = state->pc+2;
+                WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp-2, (ret & 0xff));
+				state->sp = state->sp - 2;
+				state->pc = (opcode[2] << 8) | opcode[1];
             }
             else 
             {
@@ -1652,7 +1704,13 @@ int Emulate8080(State8080 *state)
         }
             break;
         case 0xFF: // RST 7
-            Rst(state, 0x38);
+        {
+            uint16_t	ret = state->pc+2;
+            WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+            WriteMem(state, state->sp-2, (ret & 0xff));
+			state->sp = state->sp - 2;
+			state->pc = 0x38;
+        }
             break;
     }
     #if PRINTOPS
