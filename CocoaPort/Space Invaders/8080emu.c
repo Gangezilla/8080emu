@@ -5,6 +5,7 @@
 #include "8080Disassembler.h"
 
 #define PRINTOPS 0
+#define DIAGNOSTICS 1
 
 unsigned char cycles8080[] = {
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
@@ -246,6 +247,9 @@ int Emulate8080(State8080 *state)
     // printf("Opcode: %d\n", *opcode);
     state->pc += 1;
 
+    #if DIAGNOSTICS
+        printf("Opcode: %02x\n", *opcode);
+    #endif
     switch (*opcode)
     {
         case 0x00: // NOP
