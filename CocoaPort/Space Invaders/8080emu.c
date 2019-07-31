@@ -387,10 +387,7 @@ int Emulate8080(State8080 *state) {
     WriteMem(state, offset, state->l);
     WriteMem(state, offset + 1, state->h);
     state->pc += 2;
-  }
-
-    state->pc += 2;
-    break;
+  } break;
   case 0x23: //   INX H    -    (HL) <- HL + 1
     state->l++;
     if (state->l == 0) {
@@ -494,7 +491,6 @@ int Emulate8080(State8080 *state) {
   {
     WriteToHL(state, opcode[1]);
     state->pc++;
-    break;
   } break;
   case 0x37: // STC
     state->flags.cy = 1;
@@ -1309,7 +1305,7 @@ int Emulate8080(State8080 *state) {
     break;
   case 0xDE: // SBI byte
   {
-    uint8_t x = state->a - opcode[1] - state->flags.cy;
+    uint16_t x = state->a - opcode[1] - state->flags.cy;
     FlagsZSP(state, x & 0xff);
     state->flags.cy = (x > 0xff);
     state->a = x & 0xff;
