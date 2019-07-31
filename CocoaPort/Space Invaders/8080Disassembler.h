@@ -837,6 +837,5 @@ int Disassemble8080(unsigned char *codebuffer, int pc)
             printf("RST    7");
             break;
     }
-    printf("\n");
     return opbytes;
 }

@@ -76,4 +76,76 @@
     [self setNeedsDisplay: YES];
 }
 
+- (BOOL) acceptsFirstResponder {
+    return YES;
+}
+
+- (void) keyDown: (NSEvent *) event
+{
+    NSString *characters;
+    characters = [event characters];
+
+    unichar character;
+    character = [characters characterAtIndex: 0];
+
+    switch(character)
+    {
+        case NSLeftArrowFunctionKey:
+        case 'a':
+            [invaders KeyDown:KEY_P1_LEFT];
+            break;
+
+        case NSRightArrowFunctionKey:
+        case 's':
+            [invaders KeyDown:KEY_P1_RIGHT];
+            break;
+
+        case ' ':
+            [invaders KeyDown:KEY_P1_FIRE];
+            break;
+        
+        case 'c':
+            [invaders KeyDown:KEY_COIN];
+            break;
+        
+        case '1':
+            [invaders KeyDown:KEY_P1_START];
+            break;
+    }
+}
+
+- (void) keyUp: (NSEvent *) event
+{
+    NSString *characters;
+    characters = [event characters];
+    
+    unichar character;
+    character = [characters characterAtIndex: 0];
+    
+    switch (character)
+    {
+        case NSLeftArrowFunctionKey:
+        case 'a':
+            [invaders KeyUp:KEY_P1_LEFT];
+            break;
+            
+        case NSRightArrowFunctionKey:
+        case 's':
+            [invaders KeyUp:KEY_P1_RIGHT];
+            break;
+            
+        case ' ':
+            [invaders KeyUp:KEY_P1_FIRE];
+            break;
+            
+        case 'c':
+            [invaders KeyUp:KEY_COIN];
+            break;
+            
+        case '1':
+            [invaders KeyUp:KEY_P1_START];
+            break;
+    } 
+}
+
 @end

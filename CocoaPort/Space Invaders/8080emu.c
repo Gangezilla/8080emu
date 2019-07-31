@@ -105,6 +105,7 @@ static void WriteMem(State8080* state, uint16_t address, uint8_t value)
     if (address < 0x2000)
     {
         printf("Writing ROM not allowed %x\n", address);
+        // PrintLast1000();
         // exit(1);
         return;
     }
@@ -222,15 +223,9 @@ int Emulate8080(State8080 *state)
     #endif
 
     // printf("Opcode: %d\n", *opcode);
-    if(state->pc == 0x0AEA)
-    {
-        printf("0x0AEA");
-    }
+
     state->pc += 1;
 
-    #if DIAGNOSTICS
-        printf("Opcode: %02x\n", *opcode);
-    #endif
     switch (*opcode)
     {
         case 0x00: // NOP
@@ -1300,35 +1295,36 @@ int Emulate8080(State8080 *state)
             break;
         case 0xCD: // CALL
         {
-            // #if DIAGNOSTICS
-            //     if (5 == ((opcode[2] << 8) | opcode[1]))
-            //         {
-            //             if (state->c == 9)
-            //             {
-            //                 uint16_t offset = (state->d << 8) | (state->e);
-            //                 char *str = &state->memory[offset + 3];
-            //                 while (*str != '$')
-            //                     printf("%c", *str++);
-            //                 printf("\n");
-            //             }
-            //             else if (state->c == 2)
-            //             {
-            //                 printf("print char routine called\n");
-            //             }
-            //         }
-            //     else if (0 == (opcode[2] << 8) | opcode[1])
-            //     {   
-            //         // PrintLast1000();
-            //         printf("exiting in CALL 0xCD\n");
-            //         exit(0);
-            //     }
-            //     else
-            // #endif
-            uint16_t	ret = state->pc+2;
-			WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
-			WriteMem(state, state->sp-2, (ret & 0xff));
-			state->sp = state->sp - 2;
-			state->pc = (opcode[2] << 8) | opcode[1];
+            #if DIAGNOSTICS
+                if (5 == ((opcode[2] << 8) | opcode[1]))
+                    {
+                        if (state->c == 9)
+                        {
+                            uint16_t offset = (state->d << 8) | (state->e);
+                            char *str = &state->memory[offset + 3];
+                            while (*str != '$')
+                                printf("%c", *str++);
+                            printf("\n");
+                        }
+                        else if (state->c == 2)
+                        {
+                            printf("print char routine called\n");
+                        }
+                    }
+                else if (0 == (opcode[2] << 8) | opcode[1])
+                {   
+                    // PrintLast1000();
+                    printf("I think this is an error!!\n");
+                    exit(0);
+                }
+            #endif
+            {
+                uint16_t	ret = state->pc+2;
+                WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
+                WriteMem(state, state->sp-2, (ret & 0xff));
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1];
+            }
         }
             break;
         case 0xCE: // ACI
@@ -1351,9 +1347,10 @@ int Emulate8080(State8080 *state)
             break;
             
         case 0xD0: // RNC
-            if(state->flags.cy == 0) {
-               state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
-				state->sp += 2;
+            if(state->flags.cy == 0) 
+            {
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+                state->sp += 2;
             }
             break;
         case 0xD1:
@@ -1441,7 +1438,8 @@ int Emulate8080(State8080 *state)
 				state->sp = state->sp - 2;
 				state->pc = (opcode[2] << 8) | opcode[1];
             }
-            else {
+            else
+            {
                 state->pc += 2;
             }
             break;
@@ -1719,6 +1717,15 @@ int Emulate8080(State8080 *state)
         printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x PC %04x\n",
             state->a, state->b, state->c, state->d,
             state->e, state->h, state->l, state->sp, state->pc);
+    #endif
+    #if DIAGNOSTICS
+        Disassemble8080(state->memory, state->pc);
+        printf("\tC=%d,P=%d,S=%d,Z=%d,AC=%d\n", state->flags.cy, state->flags.p,
+            state->flags.s, state->flags.z, state->flags.ac);
+        printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x PC %04x\n",
+            state->a, state->b, state->c, state->d,
+            state->e, state->h, state->l, state->sp, state->pc);
+        printf("\n");
     #endif
     return cycles8080[*opcode];
 }

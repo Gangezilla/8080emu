@@ -12,7 +12,6 @@ typedef struct Flags
     uint8_t p : 1;   // parity flag
     uint8_t cy : 1;  // carry flag
     uint8_t ac : 1;  // auxilary carry flag
-    uint8_t pad : 3; // parity flag
 } Flags;
 
 typedef struct State8080

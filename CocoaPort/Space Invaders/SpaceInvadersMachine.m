@@ -68,7 +68,7 @@
     case 0:
       return 1;
     case 1:
-      return 0;
+      return in_port1;
     case 3:
     {
       uint16_t v = (shift1<<8) | shift0;
@@ -159,6 +159,59 @@
                   userInfo: nil
                   repeats:YES
                   ];
+}
+
+- (void) KeyDown: (uint8_t) key
+{
+  switch (key)
+  {
+    case KEY_COIN:
+      in_port1 |= 0x1;
+      break;
+    case KEY_P1_LEFT:
+      in_port1 |= 0x20;
+    case KEY_P1_RIGHT:
+      in_port1 |= 0x40;
+    case KEY_P1_FIRE:
+      in_port1 = 0x10;
+    case KEY_P1_START:
+      in_port1 |= 0x04;
+    case KEY_PAUSE:
+    if(paused)
+    {
+      [self startEmulation];
+      paused = NO;
+    }
+    else
+    {
+      [emulatorTimer invalidate];
+      emulatorTimer = nil;
+      paused = YES;
+    }
+    break;
+  }
+}
+
+- (void) KeyUp: (uint8_t) key
+{
+  switch(key)
+  {
+    case KEY_COIN:
+      in_port1 &= ~0x1;
+      break;
+    case KEY_P1_LEFT:
+      in_port1 &= ~0x20;
+      break;
+    case KEY_P1_RIGHT:
+      in_port1 &= ~0x40;
+      break;
+    case KEY_P1_FIRE:
+      in_port1 &= ~0x10;
+      break;
+    case KEY_P1_START:
+      in_port1 &= ~0x04;
+      break;
+  }
 }
 
 @end
