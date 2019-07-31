@@ -95,6 +95,7 @@ int parity(int x, int size)
 void UnimplementedInstruction(State8080 *state)
 {
     state->pc--; // pc incremented at start of emulate8080, undo that.
+    PrintLast1000();
     printf("Error: Unimplemented instruction\n");
     Disassemble8080(state->memory, state->pc);
     exit(1);
@@ -104,16 +105,17 @@ static void WriteMem(State8080* state, uint16_t address, uint8_t value)
 {
     if (address < 0x2000)
     {
+        PrintLast1000();
         printf("Writing ROM not allowed %x\n", address);
-        // PrintLast1000();
-        // exit(1);
+        exit(1);
         return;
     }
     
     if (address >= 0x4000)
     {
+        PrintLast1000();
         printf("Writing out of Space Invaders RAM not allowed %x\n", address);
-        // PrintLast1000();
+        exit(1);
         return;
     }
     
@@ -222,7 +224,8 @@ int Emulate8080(State8080 *state)
         state->memory[0x59e] = 0x05;    
     #endif
 
-    // printf("Opcode: %d\n", *opcode);
+    if (state->pc == 0x1446)    
+        printf("0x0798\n"); 
 
     state->pc += 1;
 
@@ -405,7 +408,6 @@ int Emulate8080(State8080 *state)
             }
             break;
         case 0x20:
-            PrintLast1000();
             UnimplementedInstruction(state);
             break;
         case 0x21: // LXI H
@@ -457,7 +459,6 @@ int Emulate8080(State8080 *state)
             }
             break;
         case 0x28:
-            PrintLast1000();
             UnimplementedInstruction(state);
             break;
         case 0x29: // DAD H
@@ -1295,31 +1296,31 @@ int Emulate8080(State8080 *state)
             break;
         case 0xCD: // CALL
         {
-            #if DIAGNOSTICS
-                if (5 == ((opcode[2] << 8) | opcode[1]))
-                    {
-                        if (state->c == 9)
-                        {
-                            uint16_t offset = (state->d << 8) | (state->e);
-                            char *str = &state->memory[offset + 3];
-                            while (*str != '$')
-                                printf("%c", *str++);
-                            printf("\n");
-                        }
-                        else if (state->c == 2)
-                        {
-                            printf("print char routine called\n");
-                        }
-                    }
-                else if (0 == (opcode[2] << 8) | opcode[1])
-                {   
-                    // PrintLast1000();
-                    printf("I think this is an error!!\n");
-                    exit(0);
-                }
-            #endif
+            // #if DIAGNOSTICS
+            //     if (5 == ((opcode[2] << 8) | opcode[1]))
+            //         {
+            //             if (state->c == 9)
+            //             {
+            //                 uint16_t offset = (state->d << 8) | (state->e);
+            //                 char *str = &state->memory[offset + 3];
+            //                 while (*str != '$')
+            //                     printf("%c", *str++);
+            //                 printf("\n");
+            //             }
+            //             else if (state->c == 2)
+            //             {
+            //                 printf("print char routine called\n");
+            //             }
+            //         }
+            //     else if (0 == (opcode[2] << 8) | opcode[1])
+            //     {   
+            //         // PrintLast1000();
+            //         printf("I think this is an error!!\n");
+            //         exit(0);
+            //     }
+            // #endif
             {
-                uint16_t	ret = state->pc+2;
+                uint16_t ret = state->pc + 2;
                 WriteMem(state, state->sp-1, (ret >> 8) & 0xff);
                 WriteMem(state, state->sp-2, (ret & 0xff));
                 state->sp = state->sp - 2;
