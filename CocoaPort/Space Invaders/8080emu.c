@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define PRINTOPS 0
-#define DIAGNOSTICS 0
+#define DIAGNOSTICS 1
 
 unsigned char cycles8080[] = {
     4,  10, 7,  5,  5,  5,  7,  4,  4,  10, 7,  5,  5,  5,  7, 4, // 0x00..0x0f
@@ -29,7 +29,7 @@ unsigned char cycles8080[] = {
     11, 10, 10, 4,  17, 11, 7,  11, 11, 5,  10, 4,  17, 17, 7, 11,
 };
 
-// #if PRINTOPS
+#if DIAGNOSTICS
 int last1000index = 0;
 uint16_t last1000pc[1000];
 
@@ -48,7 +48,6 @@ uint16_t last1000e[1000];
 uint16_t last1000h[1000];
 uint16_t last1000l[1000];
 uint16_t lastSP;
-// #endif
 
 void PrintLast1000(void) {
   int i;
@@ -63,15 +62,11 @@ void PrintLast1000(void) {
       printf("\tA $%02x BC $%02x%02x DE $%02x%02x HL $%02x%02x SP %04x\n",
              last1000a[n], last1000b[n], last1000c[n], last1000d[n],
              last1000e[n], last1000h[n], last1000l[n], last1000sp[n]);
-      // printf("\n");
-      // if (n == last1000index)
-      // {
-      //     printf("**");
-      // }
     }
     printf("\n");
   }
 }
+#endif
 
 int parity(int x, int size) {
   int i;
@@ -88,7 +83,6 @@ int parity(int x, int size) {
 
 void UnimplementedInstruction(State8080 *state) {
   state->pc--; // pc incremented at start of emulate8080, undo that.
-  PrintLast1000();
   printf("Error: Unimplemented instruction\n");
   Disassemble8080(state->memory, state->pc);
   exit(1);
@@ -96,14 +90,12 @@ void UnimplementedInstruction(State8080 *state) {
 
 static void WriteMem(State8080 *state, uint16_t address, uint8_t value) {
   if (address < 0x2000) {
-    PrintLast1000();
     printf("Writing ROM not allowed %x\n", address);
     exit(1);
     return;
   }
 
   if (address >= 0x4000) {
-    PrintLast1000();
     printf("Writing out of Space Invaders RAM not allowed %x\n", address);
     exit(1);
     return;
@@ -160,7 +152,7 @@ int Emulate8080(State8080 *state) {
   // -> is used to access members of a struct when theyre a pointer.
   unsigned char *opcode = &state->memory[state->pc];
 
-  // #if PRINTOPS
+#if DIAGNOSTICS
   last1000pc[last1000index] = state->pc;
   last1000sp[last1000index] = state->sp;
   last1000cy[last1000index] = state->flags.cy;
@@ -181,10 +173,6 @@ int Emulate8080(State8080 *state) {
   if (last1000index > 1000) {
     last1000index = 0;
   }
-  // #endif
-
-#if PRINTOPS // the # indicates a compile option, or a "preprocessor directive"
-  Disassemble8080(state->memory, state->pc);
 #endif
 
 #if DIAGNOSTICS
@@ -203,9 +191,6 @@ int Emulate8080(State8080 *state) {
   state->memory[0x59d] = 0xc2;
   state->memory[0x59e] = 0x05;
 #endif
-
-  if (state->pc == 0x1446)
-    printf("0x0798\n");
 
   state->pc += 1;
 
