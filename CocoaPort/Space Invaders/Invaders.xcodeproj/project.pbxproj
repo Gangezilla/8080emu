@@ -8,22 +8,24 @@
 
 /* Begin PBXBuildFile section */
 		0495FA5122EFE06B00279245 /* cpudiag.bin in Resources */ = {isa = PBXBuildFile; fileRef = 0495FA5022EFE06A00279245 /* cpudiag.bin */; };
+		04A91E9222F5177F00AAB5B6 /* invaders.f in Sources */ = {isa = PBXBuildFile; fileRef = 04A91E8E22F5177F00AAB5B6 /* invaders.f */; };
+		04A91E9322F5177F00AAB5B6 /* invaders.g in Resources */ = {isa = PBXBuildFile; fileRef = 04A91E8F22F5177F00AAB5B6 /* invaders.g */; };
+		04A91E9422F5177F00AAB5B6 /* invaders.e in Resources */ = {isa = PBXBuildFile; fileRef = 04A91E9122F5177F00AAB5B6 /* invaders.e */; };
 		04B0661F22E5C45700EADDDF /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 04B0661E22E5C45700EADDDF /* AppDelegate.m */; };
 		04B0662122E5C45700EADDDF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04B0662022E5C45700EADDDF /* Assets.xcassets */; };
 		04B0662422E5C45700EADDDF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04B0662222E5C45700EADDDF /* MainMenu.xib */; };
 		04B0662722E5C45700EADDDF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 04B0662622E5C45700EADDDF /* main.m */; };
 		04B0663022E5C4C100EADDDF /* InvadersView.m in Sources */ = {isa = PBXBuildFile; fileRef = 04B0662F22E5C4C100EADDDF /* InvadersView.m */; };
 		04B0663322E5CB0000EADDDF /* SpaceInvadersMachine.m in Sources */ = {isa = PBXBuildFile; fileRef = 04B0663222E5CB0000EADDDF /* SpaceInvadersMachine.m */; };
-		04B0663A22E5CC0E00EADDDF /* invaders.f in Sources */ = {isa = PBXBuildFile; fileRef = 04B0663622E5CC0E00EADDDF /* invaders.f */; };
-		04B0663B22E5CC0E00EADDDF /* invaders.g in Resources */ = {isa = PBXBuildFile; fileRef = 04B0663722E5CC0E00EADDDF /* invaders.g */; };
-		04B0663C22E5CC0E00EADDDF /* invaders.e in Resources */ = {isa = PBXBuildFile; fileRef = 04B0663922E5CC0E00EADDDF /* invaders.e */; };
-		04B0663D22E5CC8000EADDDF /* invaders.f in Resources */ = {isa = PBXBuildFile; fileRef = 04B0663622E5CC0E00EADDDF /* invaders.f */; };
-		04B0663E22E5CC8400EADDDF /* invaders.h in Resources */ = {isa = PBXBuildFile; fileRef = 04B0663822E5CC0E00EADDDF /* invaders.h */; };
 		04EC69D822EC273F00B7608F /* 8080emu.c in Sources */ = {isa = PBXBuildFile; fileRef = 04EC69D722EC273F00B7608F /* 8080emu.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0495FA5022EFE06A00279245 /* cpudiag.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = cpudiag.bin; path = ../../../../cpudiag.bin; sourceTree = "<group>"; };
+		04A91E8E22F5177F00AAB5B6 /* invaders.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; name = invaders.f; path = ../../../../invaders.f; sourceTree = "<group>"; };
+		04A91E8F22F5177F00AAB5B6 /* invaders.g */ = {isa = PBXFileReference; lastKnownFileType = file; name = invaders.g; path = ../../../../invaders.g; sourceTree = "<group>"; };
+		04A91E9022F5177F00AAB5B6 /* invaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = invaders.h; path = ../../../../invaders.h; sourceTree = "<group>"; };
+		04A91E9122F5177F00AAB5B6 /* invaders.e */ = {isa = PBXFileReference; lastKnownFileType = file; name = invaders.e; path = ../../../../invaders.e; sourceTree = "<group>"; };
 		04B0661A22E5C45700EADDDF /* Invaders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Invaders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		04B0661D22E5C45700EADDDF /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		04B0661E22E5C45700EADDDF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -36,10 +38,6 @@
 		04B0662F22E5C4C100EADDDF /* InvadersView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InvadersView.m; sourceTree = "<group>"; };
 		04B0663122E5CB0000EADDDF /* SpaceInvadersMachine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SpaceInvadersMachine.h; sourceTree = "<group>"; };
 		04B0663222E5CB0000EADDDF /* SpaceInvadersMachine.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SpaceInvadersMachine.m; sourceTree = "<group>"; };
-		04B0663622E5CC0E00EADDDF /* invaders.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; name = invaders.f; path = ../../../invaders.f; sourceTree = "<group>"; };
-		04B0663722E5CC0E00EADDDF /* invaders.g */ = {isa = PBXFileReference; lastKnownFileType = file; name = invaders.g; path = ../../../invaders.g; sourceTree = "<group>"; };
-		04B0663822E5CC0E00EADDDF /* invaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = invaders.h; path = ../../../invaders.h; sourceTree = "<group>"; };
-		04B0663922E5CC0E00EADDDF /* invaders.e */ = {isa = PBXFileReference; lastKnownFileType = file; name = invaders.e; path = ../../../invaders.e; sourceTree = "<group>"; };
 		04EC69D622EC273F00B7608F /* 8080emu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = 8080emu.h; sourceTree = "<group>"; };
 		04EC69D722EC273F00B7608F /* 8080emu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = 8080emu.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -95,11 +93,11 @@
 		04B0663522E5CBEC00EADDDF /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				04B0663922E5CC0E00EADDDF /* invaders.e */,
-				04B0663622E5CC0E00EADDDF /* invaders.f */,
+				04A91E9122F5177F00AAB5B6 /* invaders.e */,
+				04A91E8E22F5177F00AAB5B6 /* invaders.f */,
+				04A91E8F22F5177F00AAB5B6 /* invaders.g */,
+				04A91E9022F5177F00AAB5B6 /* invaders.h */,
 				0495FA5022EFE06A00279245 /* cpudiag.bin */,
-				04B0663722E5CC0E00EADDDF /* invaders.g */,
-				04B0663822E5CC0E00EADDDF /* invaders.h */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";
@@ -162,13 +160,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				04B0663C22E5CC0E00EADDDF /* invaders.e in Resources */,
 				0495FA5122EFE06B00279245 /* cpudiag.bin in Resources */,
-				04B0663D22E5CC8000EADDDF /* invaders.f in Resources */,
-				04B0663B22E5CC0E00EADDDF /* invaders.g in Resources */,
-				04B0663E22E5CC8400EADDDF /* invaders.h in Resources */,
 				04B0662122E5C45700EADDDF /* Assets.xcassets in Resources */,
 				04B0662422E5C45700EADDDF /* MainMenu.xib in Resources */,
+				04A91E9322F5177F00AAB5B6 /* invaders.g in Resources */,
+				04A91E9422F5177F00AAB5B6 /* invaders.e in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -183,8 +179,8 @@
 				04EC69D822EC273F00B7608F /* 8080emu.c in Sources */,
 				04B0663022E5C4C100EADDDF /* InvadersView.m in Sources */,
 				04B0663322E5CB0000EADDDF /* SpaceInvadersMachine.m in Sources */,
+				04A91E9222F5177F00AAB5B6 /* invaders.f in Sources */,
 				04B0661F22E5C45700EADDDF /* AppDelegate.m in Sources */,
-				04B0663A22E5CC0E00EADDDF /* invaders.f in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

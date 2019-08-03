@@ -1122,7 +1122,7 @@ int Emulate8080(State8080 *state) {
     state->pc = 0x0000;
   } break;
   case 0xC8: // RZ
-    if (state->flags.z == 1) {
+    if (state->flags.z) {
       state->pc =
           state->memory[state->sp] | (state->memory[state->sp + 1] << 8);
       state->sp += 2;
