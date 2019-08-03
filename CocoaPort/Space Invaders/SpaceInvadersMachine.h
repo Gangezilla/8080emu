@@ -7,6 +7,7 @@
 //
 
 #include "8080emu.h"
+#import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
 
 #define KEY_COIN 'c'
@@ -30,6 +31,10 @@
 
   uint8_t in_port1;
   BOOL paused;
+
+  uint8_t out_port3, out_port5, last_out_port3, last_out_port5;
+
+  NSSound *ufo;
 }
 
 - (double)timeusec;

@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define PRINTOPS 0
-#define DIAGNOSTICS 1
+#define DIAGNOSTICS 0
 
 unsigned char cycles8080[] = {
     4,  10, 7,  5,  5,  5,  7,  4,  4,  10, 7,  5,  5,  5,  7, 4, // 0x00..0x0f

@@ -1,14 +1,6 @@
-//
-//  SpaceInvadersMachine.m
-//  Space Invaders
-//
-//  Created by Scott Gangemi on 22/7/19.
-//  Copyright © 2019 Scott Gangemi. All rights reserved.
-//
-
 #import "SpaceInvadersMachine.h"
 
-#define USE_THREADS
+#define USE_THREADS 1
 #include <sys/time.h>
 
 @implementation SpaceInvadersMachine
@@ -36,11 +28,11 @@
   state = calloc(sizeof(State8080), 1);
   state->memory = malloc(16 * 0x1000);
 
-  [self ReadFile:@"cpudiag.bin" IntoMemoryAt:0x100];
-  // [self ReadFile:@"invaders.h" IntoMemoryAt:0];
-  // [self ReadFile:@"invaders.g" IntoMemoryAt:0x800];
-  // [self ReadFile:@"invaders.f" IntoMemoryAt:0x1000];
-  // [self ReadFile:@"invaders.e" IntoMemoryAt:0x1800];
+  // [self ReadFile:@"cpudiag.bin" IntoMemoryAt:0x100];
+  [self ReadFile:@"invaders.h" IntoMemoryAt:0];
+  [self ReadFile:@"invaders.g" IntoMemoryAt:0x800];
+  [self ReadFile:@"invaders.f" IntoMemoryAt:0x1000];
+  [self ReadFile:@"invaders.e" IntoMemoryAt:0x1800];
 
   return self;
 }
@@ -75,10 +67,61 @@
   case 2:
     shift_offset = value & 0x7;
     break;
+  case 3:
+    out_port3 = value;
+    break;
   case 4:
     shift0 = shift1;
     shift1 = value;
     break;
+  case 5:
+    out_port5 = value;
+    break;
+  }
+}
+
+- (void)PlaySounds {
+  if (out_port3 != last_out_port3) {
+    if ((out_port3 & 0x1) && !(last_out_port3 & 0x1)) {
+      ufo = [NSSound soundNamed:@"0.wav"];
+      [ufo setLoops:YES];
+      [ufo play];
+    } else if (!(out_port3 & 0x1) && (last_out_port3 & 0x1)) {
+      if (ufo) {
+        [ufo stop];
+        ufo = NULL;
+      }
+    }
+
+    if ((out_port3 & 0x2) && !(last_out_port3 & 0x2)) {
+      [[NSSound soundNamed:@"1.wav"] play];
+    }
+    if ((out_port3 & 0x4) && !(last_out_port3 & 0x4)) {
+      [[NSSound soundNamed:@"2.wav"] play];
+    }
+    if ((out_port3 & 0x8) && !(last_out_port3 & 0x8)) {
+      [[NSSound soundNamed:@"3.wav"] play];
+    }
+  }
+
+  if (out_port5 != last_out_port5) {
+    if ((out_port5 & 0x1) && !(last_out_port5 & 0x1)) {
+      [[NSSound soundNamed:@"4.wav"] play];
+    }
+    if ((out_port5 & 0x2) && !(last_out_port5 & 0x2)) {
+      [[NSSound soundNamed:@"5.wav"] play];
+    }
+    if ((out_port5 & 0x4) && !(last_out_port5 & 0x4)) {
+      [[NSSound soundNamed:@"6.wav"] play];
+    }
+    if ((out_port5 & 0x8) && !(last_out_port5 & 0x8)) {
+      [[NSSound soundNamed:@"7.wav"] play];
+    }
+    if ((out_port5 & 0x10) && !(last_out_port5 & 0x10)) {
+      [[NSSound soundNamed:@"8.wav"] play];
+    }
+
+    last_out_port5 = out_port5;
   }
 }
 
@@ -122,6 +165,7 @@
       [self OutSpaceInvaders:op[1] value:state->a];
       state->pc += 2;
       cycles += 3;
+      [self PlaySounds];
     } else {
       cycles += Emulate8080(state);
     }
@@ -144,12 +188,16 @@
     break;
   case KEY_P1_LEFT:
     in_port1 |= 0x20;
+    break;
   case KEY_P1_RIGHT:
     in_port1 |= 0x40;
+    break;
   case KEY_P1_FIRE:
     in_port1 = 0x10;
+    break;
   case KEY_P1_START:
     in_port1 |= 0x04;
+    break;
   case KEY_PAUSE:
     if (paused) {
       [self startEmulation];
